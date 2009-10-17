@@ -1,9 +1,17 @@
-1. Introduction
+1. Introduction.
 
-FitNesse plugin that provides Maven Classpath support.
+    FitNesse plugin that provides Maven Classpath support.
 
-2. How to use
+2. How to use.
 
-3. How to contribute
+    - Download the distribution.
+    - Add the following line to plugins.properties: WikiWidgets = fitnesse.wikitext.widgets.MavenClasspathWidget.
+    - Run fitnesse as follows: java -cp maven-classpath-plugin-[version]-jar-with-dependencies.jar -jar fitnesse.jar.
+    - Refer to the pom file as follows: !pomFile /path/to/pom.xml.
+
+3. How to contribute.
+
+    - Send patches.
+    - Fork the repository and send pull requests.
 
 
