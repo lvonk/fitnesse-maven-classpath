@@ -20,6 +20,7 @@ import org.apache.maven.execution.MavenExecutionResult;
 
 import fitnesse.html.HtmlUtil;
 import fitnesse.wiki.PageData;
+import fitnesse.wikitext.WidgetBuilder;
 
 public class MavenClasspathWidget extends ParentWidget implements WidgetWithTextArgument  {
 
@@ -31,11 +32,13 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
   public static final String REGEXP = "^!pomFile [^\r\n]*";
   private static final Pattern pattern = Pattern.compile("^!pomFile (.*)");
 
-  public MavenClasspathWidget(ParentWidget parent, String text) {
+  public MavenClasspathWidget(ParentWidget parent, String text) throws Exception {
     super(parent);
     Matcher matcher = pattern.matcher(text);
     if (matcher.find()) {
-      this.pomFile = matcher.group(1);
+      String matchedGroup = matcher.group(1);
+      addChildWidgets(matchedGroup);
+      this.pomFile = childHtml();
       ensurePomFileExists();
     } else {
       throw new IllegalArgumentException("no pom file specified.");
@@ -52,6 +55,12 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
   public String asWikiText() throws Exception {
     return "!pomFile " + pomFile;
   }
+
+  @Override
+  public WidgetBuilder getBuilder() {
+    return WidgetBuilder.variableEvaluatorWidgetBuilder;
+  }
+
 
   public String getText() throws Exception {
     List<String> classpathElements = getMavenClasspath();
