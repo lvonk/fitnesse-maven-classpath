@@ -10,28 +10,23 @@ import org.codehaus.plexus.util.FileUtils;
 import fitnesse.wiki.PageData;
 
 public class MavenClasspathWidgetTest extends WidgetTestCase {
-  private static final String TEST_PROJECT_ROOT = new File(
-      "src/test/resources/MavenClasspathWidget").getAbsolutePath();
+  private static final String TEST_PROJECT_ROOT = new File("src/test/resources/MavenClasspathWidget").getAbsolutePath();
   private final static String TEST_POM_FILE = "src/test/resources/MavenClasspathWidget/pom.xml";
-  private File mavenLocalRepo = new File(System.getProperty("java.io.tmpdir"),
-      "MavenClasspathWidgetTest/m2/repo");
+  private File mavenLocalRepo = new File(System.getProperty("java.io.tmpdir"), "MavenClasspathWidgetTest/m2/repo");
   private String path = mavenLocalRepo.getAbsolutePath();
 
   private MavenClasspathWidget widget;
+  private Downloader downloader;
 
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    widget = new MavenClasspathWidget(new MockWidgetRoot(), "!pomFile "
-        + TEST_POM_FILE) {
-      @Override
-      protected File getLocalRepository() {
-        return mavenLocalRepo;
-      }
-    };
+    widget = new MavenClasspathWidget(new MockWidgetRoot(), "!pomFile " + TEST_POM_FILE);
+    downloader = new Downloader();
+    downloader.localRepository = mavenLocalRepo;
+    widget.setDownloader(downloader);
     mavenLocalRepo.mkdirs();
-    FileUtils.copyDirectoryStructure(new File(TEST_PROJECT_ROOT, "repository"),
-        mavenLocalRepo);
+    FileUtils.copyDirectoryStructure(new File(TEST_PROJECT_ROOT, "repository"), mavenLocalRepo);
   }
 
   @Override
@@ -45,10 +40,8 @@ public class MavenClasspathWidgetTest extends WidgetTestCase {
     return MavenClasspathWidget.REGEXP;
   }
 
-  public void testThatMavenClasspathWidgetIsAddedToTheClasspathWidgetBuilder()
-      throws Exception {
-    assertEquals(MavenClasspathWidget.class, PageData.classpathWidgetBuilder
-        .findWidgetClassMatching("!pomFile pom.xml"));
+  public void testThatMavenClasspathWidgetIsAddedToTheClasspathWidgetBuilder() throws Exception {
+    assertEquals(MavenClasspathWidget.class, PageData.classpathWidgetBuilder.findWidgetClassMatching("!pomFile pom.xml"));
   }
 
   public void testRegexp() throws Exception {
@@ -61,29 +54,22 @@ public class MavenClasspathWidgetTest extends WidgetTestCase {
 
   public void testRender() throws Exception {
     String actual = widget.render();
-    String expected = metaText("classpath: " + TEST_PROJECT_ROOT
-        + "/target/classes")
-        + BRtag
-        + metaText(classpathElementForRender("/fitnesse/fitnesse-dep/1.0/fitnesse-dep-1.0.jar"))
-        + BRtag
-        + metaText(classpathElementForRender("/fitnesse/fitnesse-subdep/1.0/fitnesse-subdep-1.0.jar"))
-        + BRtag;
+    String expected = metaText("classpath: " + TEST_PROJECT_ROOT + "/target/classes") + BRtag
+        + metaText(classpathElementForRender("/fitnesse/fitnesse-dep/1.0/fitnesse-dep-1.0.jar")) + BRtag
+        + metaText(classpathElementForRender("/fitnesse/fitnesse-subdep/1.0/fitnesse-subdep-1.0.jar")) + BRtag;
     assertEquals(expected, actual);
   }
 
   public void testGetText() throws Exception {
     String actual = widget.getText();
-    String expected = TEST_PROJECT_ROOT
-        + "/target/classes"
-        + classpathElementForText("/fitnesse/fitnesse-dep/1.0/fitnesse-dep-1.0.jar")
+    String expected = TEST_PROJECT_ROOT + "/target/classes" + classpathElementForText("/fitnesse/fitnesse-dep/1.0/fitnesse-dep-1.0.jar")
         + classpathElementForText("/fitnesse/fitnesse-subdep/1.0/fitnesse-subdep-1.0.jar");
     assertEquals(expected, actual);
   }
 
   public void testFailFastWhenPomFileDoesNotExist() throws Exception {
     try {
-      new MavenClasspathWidget(new MockWidgetRoot(),
-          "!pomFile /non/existing/pom.xml");
+      new MavenClasspathWidget(new MockWidgetRoot(), "!pomFile /non/existing/pom.xml");
       fail("should have thrown IllegalArgumentException");
     } catch (IllegalArgumentException expected) {
     }
@@ -99,13 +85,9 @@ public class MavenClasspathWidgetTest extends WidgetTestCase {
 
   public void testShouldReplaceVariablesInPath() throws Exception {
     System.setProperty("MY_PATH", "src/test/resources");
-    widget = new MavenClasspathWidget(new MockWidgetRoot(),
-        "!pomFile ${MY_PATH}/MavenClasspathWidget/pom.xml") {
-      @Override
-      protected File getLocalRepository() {
-        return mavenLocalRepo;
-      }
-    };
+    widget = new MavenClasspathWidget(new MockWidgetRoot(), "!pomFile ${MY_PATH}/MavenClasspathWidget/pom.xml");
+    widget.setDownloader(downloader);
+
     String html = widget.childHtml();
     assertEquals(TEST_POM_FILE, html);
   }
@@ -116,5 +98,15 @@ public class MavenClasspathWidgetTest extends WidgetTestCase {
 
   private String classpathElementForText(String file) {
     return File.pathSeparator + path + file;
+  }
+
+  public void testRenderWithPomAsUrl() throws Exception {
+    // this is a test with a real pom on the maven server, so it won't work offline
+    // TODO : use a local server
+    widget = new MavenClasspathWidget(new MockWidgetRoot(), "!pomFile "
+        + "http://repo2.maven.org/maven2/org/springframework/spring-jdbc/2.5.6/spring-jdbc-2.5.6.pom");
+    widget.setDownloader(downloader);
+    String actual = widget.render();
+    System.out.println(actual);
   }
 }

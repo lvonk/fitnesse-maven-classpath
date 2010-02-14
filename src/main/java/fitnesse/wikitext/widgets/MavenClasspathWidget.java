@@ -31,7 +31,12 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
   private String pomFile;
   public static final String REGEXP = "^!pomFile [^\r\n]*";
   private static final Pattern pattern = Pattern.compile("^!pomFile (.*)");
+  private Downloader downloader = new Downloader();
 
+  public void setDownloader(Downloader downloader) {
+    this.downloader = downloader;
+  }
+  
   public MavenClasspathWidget(ParentWidget parent, String text) throws Exception {
     super(parent);
     Matcher matcher = pattern.matcher(text);
@@ -46,6 +51,10 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
   }
 
   private void ensurePomFileExists() {
+    // TODO: check that the link really exist
+    if (pomFile.startsWith("http://")) {
+      return;
+    }
     if(!new File(pomFile).exists()) {
       throw new IllegalArgumentException(pomFile + " does not exist");
     }
@@ -67,12 +76,22 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
     return createClasspath(classpathElements);
   }
 
-  private List<String> getMavenClasspath() throws MavenEmbedderException,
-      DependencyResolutionRequiredException {
-    Configuration configuration = mavenConfiguration();
+  private List<String> getMavenClasspath() throws Exception {
+    Configuration configuration = downloader.createConfiguration();
     ensureMavenConfigurationIsValid(configuration);
-    MavenExecutionRequest request = createExecutionRequest(projectRootDirectory());
-    List<String> classpathElements = getClasspathElements(configuration, request);
+
+    List<String> classpathElements = getClasspathElements(configuration);
+    return classpathElements;
+  }
+
+  private List<String> getClasspathElements(Configuration configuration) throws Exception {
+    List<String> classpathElements;
+    if (pomFile.startsWith("http://")) {
+      classpathElements = downloader.getArtifactAndDependencies(pomFile);
+    } else {
+      MavenExecutionRequest request = createExecutionRequest(projectRootDirectory());
+      classpathElements = getClasspathElements(configuration, request);
+    }
     return classpathElements;
   }
 
