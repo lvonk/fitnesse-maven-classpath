@@ -108,6 +108,7 @@ public class Downloader {
 			if (statusCode != HttpStatus.SC_OK) {
 				throw new DownloadException("Impossible to retrieve " + pomUrl + ", error code: " + statusCode);
 			} else {
+			  ensureParentFileExist(res);
 				FileUtils.fileWrite(res.getAbsolutePath(), method.getResponseBodyAsString(100000));
 			}
 		} catch (HttpException e) {
@@ -117,7 +118,15 @@ public class Downloader {
 		}
 	}
 
-	public void overrideLocalRepository(File repository) {
+	private void ensureParentFileExist(File file) {
+	  File parent = file.getParentFile();
+	  if ( ! parent.exists()){
+	    FileUtils.mkdir(parent.getAbsolutePath());
+	  }
+  }
+	
+
+  public void overrideLocalRepository(File repository) {
 		localRepository = repository;
 	}
 
