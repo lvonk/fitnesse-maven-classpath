@@ -38,16 +38,6 @@ public class DownloaderTest {
 
   }
 
-  private void assertArtifactContained(List<Artifact> artifacts, String groupId, String artifactId, String version) {
-    boolean found = false;
-    for (Artifact artifact : artifacts) {
-      if (groupId.equals(artifact.getGroupId()) && artifactId.equals(artifact.getArtifactId()) && version.equals(artifact.getVersion())) {
-        found = true;
-      }
-    }
-    assertTrue(found);
-  }
-
   @Test
   public void shouldDownloadAPom() throws DownloadException {
     File res = downloader.downloadPom("http://repo1.maven.org/maven2/commons-beanutils/commons-beanutils/1.7.0/commons-beanutils-1.7.0.pom");
