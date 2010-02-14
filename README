@@ -10,7 +10,7 @@
     - Start FitNesse: java -jar fitnesse.jar
     - Refer to the pom file as follows: 
         !pomFile /path/to/pom.xml
-    	!pomFile http://repository.url/link/to/myproject-1.0.0.pom
+        !pomFile http://repository.url/link/to/myproject-1.0.0.pom
 	
 	** Releases prior to v20091121:
     - Run fitnesse as follows: java -cp fitnesse.jar:plugins/maven-classpath-plugin-[version]-jar-with-dependencies.jar fitnesseMain.FitNesseMain. (**)
