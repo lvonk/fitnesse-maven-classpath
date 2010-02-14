@@ -46,7 +46,7 @@ public class Downloader {
 		StringBuilder sb = new StringBuilder();
 		sb.append("<project>\n");
 		sb.append("  <modelVersion>4.0.0</modelVersion>\n");
-		sb.append("  <groupId>com.octo.tmp</groupId>\n");
+		sb.append("  <groupId>org.fitnesse.tmp</groupId>\n");
 		sb.append("  <artifactId>").append(model.getArtifactId()).append("-for-dependencies</artifactId>\n");
 		sb.append("  <version>0.0.1-SNAPSHOT</version>\n");
 		sb.append("  <dependencies>\n");
@@ -92,7 +92,7 @@ public class Downloader {
 
 	File downloadPom(String pomUrl) throws DownloadException {
 		String fileName = pomUrl.substring(pomUrl.lastIndexOf('/') + 1);
-		File tmpDir = new File(System.getProperty("java.io.tmpdir"));
+		File tmpDir = new File(System.getProperty("java.io.tmpdir"), "MavenClasspathWidgetTest/downloadedPomFiles");
 		File res = new File(tmpDir, fileName);
 		if (!res.exists() || fileName.contains("SNAPSHOT")) {
 			downloadFile(pomUrl, res);
