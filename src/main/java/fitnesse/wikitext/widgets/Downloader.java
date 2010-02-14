@@ -36,6 +36,7 @@ public class Downloader {
 
 		List compileClasspathElements = mavenResult.getProject().getCompileClasspathElements();
 		// little hack for now to remove source dir
+		//TODO: find a way to have only jars elements, not sources elements
 		compileClasspathElements.remove(0);
 		return compileClasspathElements;
 	}

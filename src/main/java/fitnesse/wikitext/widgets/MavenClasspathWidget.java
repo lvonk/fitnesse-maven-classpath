@@ -10,9 +10,7 @@ import java.util.regex.Pattern;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.embedder.Configuration;
 import org.apache.maven.embedder.ConfigurationValidationResult;
-import org.apache.maven.embedder.DefaultConfiguration;
 import org.apache.maven.embedder.MavenEmbedder;
-import org.apache.maven.embedder.MavenEmbedderConsoleLogger;
 import org.apache.maven.embedder.MavenEmbedderException;
 import org.apache.maven.execution.DefaultMavenExecutionRequest;
 import org.apache.maven.execution.MavenExecutionRequest;
@@ -146,25 +144,5 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
         pomFile);
     return request;
   }
-
-  private Configuration mavenConfiguration() {
-    Configuration configuration = new DefaultConfiguration().setClassLoader(Thread.currentThread()
-        .getContextClassLoader()).setMavenEmbedderLogger(new MavenEmbedderConsoleLogger());
-    if(hasNonDefaultLocalRepository()) {
-      configuration.setLocalRepository(getLocalRepository());
-    }
-    return configuration;
-  }
-
-  private boolean hasNonDefaultLocalRepository() {
-    return getLocalRepository() != null;
-  }
-  /*
-   * can be overridden for test purposes.
-   */
-  protected File getLocalRepository() {
-    return null;
-  }
-  
 
 }
