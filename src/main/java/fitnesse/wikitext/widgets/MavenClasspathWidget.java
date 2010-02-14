@@ -20,12 +20,12 @@ import fitnesse.html.HtmlUtil;
 import fitnesse.wiki.PageData;
 import fitnesse.wikitext.WidgetBuilder;
 
-public class MavenClasspathWidget extends ParentWidget implements WidgetWithTextArgument  {
+public class MavenClasspathWidget extends ParentWidget implements WidgetWithTextArgument {
 
   static {
     PageData.classpathWidgetBuilder.addWidgetClass(MavenClasspathWidget.class);
   }
-  
+
   private String pomFile;
   public static final String REGEXP = "^!pomFile [^\r\n]*";
   private static final Pattern pattern = Pattern.compile("^!pomFile (.*)");
@@ -34,7 +34,7 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
   public void setDownloader(Downloader downloader) {
     this.downloader = downloader;
   }
-  
+
   public MavenClasspathWidget(ParentWidget parent, String text) throws Exception {
     super(parent);
     Matcher matcher = pattern.matcher(text);
@@ -53,7 +53,7 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
     if (pomFile.startsWith("http://")) {
       return;
     }
-    if(!new File(pomFile).exists()) {
+    if (!new File(pomFile).exists()) {
       throw new IllegalArgumentException(pomFile + " does not exist");
     }
   }
@@ -67,7 +67,6 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
   public WidgetBuilder getBuilder() {
     return WidgetBuilder.variableEvaluatorWidgetBuilder;
   }
-
 
   public String getText() throws Exception {
     List<String> classpathElements = getMavenClasspath();
@@ -96,14 +95,14 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
   @Override
   public String render() throws Exception {
     List<String> classpathElements = getMavenClasspath();
-    
+
     String classpathForRender = "";
     for (String element : classpathElements) {
       classpathForRender += HtmlUtil.metaText("classpath: " + element) + HtmlUtil.BRtag;
-      
+
     }
     return classpathForRender;
-    
+
   }
 
   private void ensureMavenConfigurationIsValid(Configuration configuration) {
@@ -112,7 +111,7 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
       throw new IllegalStateException("Unable to create valid Maven Configuration.");
     }
   }
-  
+
   private String createClasspath(List<String> classpathElements) {
     String classpath = "";
     for (String element : classpathElements) {
@@ -125,8 +124,8 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
     return classpath.substring(0, classpath.length() - 1);
   }
 
-  private List<String> getClasspathElements(Configuration configuration, MavenExecutionRequest request)
-      throws MavenEmbedderException, DependencyResolutionRequiredException {
+  private List<String> getClasspathElements(Configuration configuration, MavenExecutionRequest request) throws MavenEmbedderException,
+      DependencyResolutionRequiredException {
     MavenEmbedder embedder = new MavenEmbedder(configuration);
     MavenExecutionResult executionResult = embedder.readProjectWithDependencies(request);
     List<String> classpathElements = executionResult.getProject().getCompileClasspathElements();
@@ -140,8 +139,7 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
   }
 
   private MavenExecutionRequest createExecutionRequest(File projectDirectory) {
-    MavenExecutionRequest request = new DefaultMavenExecutionRequest().setBaseDirectory(projectDirectory).setPomFile(
-        pomFile);
+    MavenExecutionRequest request = new DefaultMavenExecutionRequest().setBaseDirectory(projectDirectory).setPomFile(pomFile);
     return request;
   }
 

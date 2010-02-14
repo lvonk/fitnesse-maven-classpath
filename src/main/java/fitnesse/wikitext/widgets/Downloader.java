@@ -77,19 +77,17 @@ public class Downloader {
 	}
 
 	void setUserSettingsIfPresents(Configuration configuration) {
-		String m2Home = System.getProperty("user.home");
-		if (m2Home != null) {
-			File userSettings = new File(m2Home, ".m2/settings.xml");
-			configuration.setUserSettingsFile(userSettings);
+		File userSettings = MavenEmbedder.DEFAULT_USER_SETTINGS_FILE;
+		if (userSettings.exists() && userSettings.isFile()){
+		  configuration.setUserSettingsFile(userSettings);
 		}
 	}
 
 	void setGlobalSettingsIfPresents(Configuration configuration) {
-		String m2Home = System.getenv("M2_HOME");
-		if (m2Home != null) {
-			File globalSettings = new File(m2Home, "conf/settings.xml");
-			configuration.setGlobalSettingsFile(globalSettings);
-		}
+    File globalSettings = MavenEmbedder.DEFAULT_GLOBAL_SETTINGS_FILE;
+    if (globalSettings.exists() && globalSettings.isFile()){
+      configuration.setGlobalSettingsFile(globalSettings);
+    }
 	}
 
 	File downloadPom(String pomUrl) throws DownloadException {

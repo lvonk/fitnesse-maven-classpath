@@ -47,25 +47,4 @@ public class DownloaderTest {
     assertEquals("commons-beanutils-1.7.0.pom", res.getName());
   }
 
-  @Test
-  @Ignore
-  // TODO: fix this to read global settings
-  public void shoudSetGlobalSettingsIfPresent() {
-    Configuration configuration = new DefaultConfiguration();
-
-    downloader.setGlobalSettingsIfPresents(configuration);
-
-    assertNotNull(configuration.getGlobalSettingsFile());
-  }
-
-  @Test
-  public void shoudSetUserSettingsIfPresent() {
-    Configuration configuration = new DefaultConfiguration();
-
-    downloader.setUserSettingsIfPresents(configuration);
-
-    assertNotNull(configuration.getUserSettingsFile());
-  }
-
-  /** Test avec des settings particuliers */
 }
