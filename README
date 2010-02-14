@@ -7,10 +7,10 @@
     - Download the distribution.
     - Add the following line to plugins.properties: WikiWidgets = fitnesse.wikitext.widgets.MavenClasspathWidget.
     - Copy the maven-classpath-plugin-[version]-jar-with-dependencies.jar to the plugins directory of the directory where the fitnesse.jar is located.
-	- Start FitNesse: java -jar fitnesse.jar
-	- Refer to the pom file as follows: 
-		!pomFile /path/to/pom.xml
-		!pomFile http://repository.url/link/to/myproject-1.0.0.pom
+    - Start FitNesse: java -jar fitnesse.jar
+    - Refer to the pom file as follows: 
+        !pomFile /path/to/pom.xml
+    	!pomFile http://repository.url/link/to/myproject-1.0.0.pom
 	
 	** Releases prior to v20091121:
     - Run fitnesse as follows: java -cp fitnesse.jar:plugins/maven-classpath-plugin-[version]-jar-with-dependencies.jar fitnesseMain.FitNesseMain. (**)
