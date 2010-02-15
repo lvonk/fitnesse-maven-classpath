@@ -3,6 +3,7 @@ package fitnesse.wikitext.widgets;
 import static org.apache.maven.embedder.MavenEmbedder.validateConfiguration;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -15,6 +16,7 @@ import org.apache.maven.embedder.MavenEmbedderException;
 import org.apache.maven.execution.DefaultMavenExecutionRequest;
 import org.apache.maven.execution.MavenExecutionRequest;
 import org.apache.maven.execution.MavenExecutionResult;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 import fitnesse.html.HtmlUtil;
 import fitnesse.wiki.PageData;
@@ -73,7 +75,7 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
     return createClasspath(classpathElements);
   }
 
-  private List<String> getMavenClasspath() throws Exception {
+  private List<String> getMavenClasspath() throws MavenEmbedderException, DependencyResolutionRequiredException, XmlPullParserException, IOException, DownloadException {
     Configuration configuration = downloader.createConfiguration();
     ensureMavenConfigurationIsValid(configuration);
 
@@ -81,7 +83,7 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
     return classpathElements;
   }
 
-  private List<String> getClasspathElements(Configuration configuration) throws Exception {
+  private List<String> getClasspathElements(Configuration configuration) throws MavenEmbedderException, DependencyResolutionRequiredException, XmlPullParserException, IOException, DownloadException  {
     List<String> classpathElements;
     if (pomFile.startsWith("http://")) {
       classpathElements = downloader.getArtifactAndDependencies(pomFile);
@@ -93,16 +95,18 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
   }
 
   @Override
-  public String render() throws Exception {
-    List<String> classpathElements = getMavenClasspath();
-
-    String classpathForRender = "";
-    for (String element : classpathElements) {
-      classpathForRender += HtmlUtil.metaText("classpath: " + element) + HtmlUtil.BRtag;
-
+  public String render() throws MavenEmbedderException, DependencyResolutionRequiredException, XmlPullParserException, IOException {
+    List<String> classpathElements;
+    try {
+      classpathElements = getMavenClasspath();
+      String classpathForRender = "";
+      for (String element : classpathElements) {
+        classpathForRender += HtmlUtil.metaText("classpath: " + element) + HtmlUtil.BRtag;
+      }
+      return classpathForRender;
+    } catch (DownloadException e) {
+      return "Error : unable to download pom, check the url and connexion settings. url="+pomFile;
     }
-    return classpathForRender;
-
   }
 
   private void ensureMavenConfigurationIsValid(Configuration configuration) {

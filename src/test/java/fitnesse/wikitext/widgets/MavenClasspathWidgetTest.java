@@ -104,9 +104,19 @@ public class MavenClasspathWidgetTest extends WidgetTestCase {
     // this is a test with a real pom on the maven server, so it won't work offline
     // TODO : use a local server
     widget = new MavenClasspathWidget(new MockWidgetRoot(), "!pomFile "
-        + "http://repo2.maven.org/maven2/org/springframework/spring-jdbc/2.5.6/spring-jdbc-2.5.6.pom");
+        + "http://repo2.maven.org/maven2/commons-beanutils/commons-beanutils/1.7.0/commons-beanutils-1.7.0.pom");
     widget.setDownloader(downloader);
     String actual = widget.render();
     System.out.println(actual);
+  }
+  
+  public void testShouldTryToReadLocalPomIfURLIsNotAccessible() throws Exception{
+    String url = "http://servernotexist/artifactnotexist.pom";
+    widget = new MavenClasspathWidget(new MockWidgetRoot(), "!pomFile "
+        + url);
+    widget.setDownloader(downloader);
+    
+    String actual = widget.render();
+    assertEquals("Error : unable to download pom, check the url and connexion settings. url="+url, actual);
   }
 }

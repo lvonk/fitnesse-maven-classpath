@@ -8,10 +8,14 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.embedder.Configuration;
 import org.apache.maven.embedder.DefaultConfiguration;
 import org.apache.maven.embedder.MavenEmbedder;
 import org.apache.maven.embedder.MavenEmbedderConsoleLogger;
+import org.apache.maven.embedder.MavenEmbedderException;
 import org.apache.maven.execution.DefaultMavenExecutionRequest;
 import org.apache.maven.execution.MavenExecutionResult;
 import org.apache.maven.model.Model;
@@ -20,10 +24,11 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 public class Downloader {
 
+  public static Log log = LogFactory.getLog(Downloader.class);
+  
 	File localRepository;
 
-  
-	public List<String> getArtifactAndDependencies(String pomUrl) throws DownloadException, Exception {
+	public List<String> getArtifactAndDependencies(String pomUrl) throws MavenEmbedderException, XmlPullParserException, IOException, DependencyResolutionRequiredException, DownloadException {
 
 		File pom = downloadPom(pomUrl);
 
@@ -95,7 +100,18 @@ public class Downloader {
 		File tmpDir = new File(System.getProperty("java.io.tmpdir"), "MavenClasspathWidgetTest/downloadedPomFiles");
 		File res = new File(tmpDir, fileName);
 		if (!res.exists() || fileName.contains("SNAPSHOT")) {
-			downloadFile(pomUrl, res);
+			try {
+        downloadFile(pomUrl, res);
+      } catch (DownloadException e) {
+        if (res.exists()) {
+          // file has already been downloaded, we will use this one, should be correct
+          log.debug("Unable to download pom ["+pomUrl+"], using previous file");
+        }else{
+          // unable to download this is a problem, throw exception
+          log.warn("Unable to download pom ["+pomUrl+"], and there is no local file");
+          throw e;
+        }
+      }
 		}
 		return res;
 	}

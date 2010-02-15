@@ -10,6 +10,7 @@ import java.util.List;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.embedder.Configuration;
 import org.apache.maven.embedder.DefaultConfiguration;
+import org.codehaus.plexus.util.FileUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -42,9 +43,16 @@ public class DownloaderTest {
   public void shouldDownloadAPom() throws DownloadException {
     File res = downloader.downloadPom("http://repo1.maven.org/maven2/commons-beanutils/commons-beanutils/1.7.0/commons-beanutils-1.7.0.pom");
     assertNotNull(res);
+    System.out.println(res.getAbsolutePath());
     assertTrue(res.exists());
     assertTrue(res.isFile());
     assertEquals("commons-beanutils-1.7.0.pom", res.getName());
   }
-
+  
+  @Test(expected=DownloadException.class)
+  public void shouldSendExceptionWhenUnableToDownloadPom() throws DownloadException {
+    downloader.downloadPom("http://serverdoesnotexist.com/maven2/undefined/undefined/999/undefined-999.pom");
+  }
+  
+ 
 }
