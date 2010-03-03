@@ -7,12 +7,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.util.List;
 
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.embedder.Configuration;
-import org.apache.maven.embedder.DefaultConfiguration;
-import org.codehaus.plexus.util.FileUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class DownloaderTest {
