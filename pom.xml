@@ -3,7 +3,7 @@
 	<groupId>com.github.joel1di1</groupId>
 	<artifactId>maven-classpath-plugin</artifactId>
 	<name>Maven classpath plugin for FitNesse</name>
-	<version>1.2.2</version>
+	<version>1.2.3-SNAPSHOT</version>
 	<distributionManagement>
 		<snapshotRepository>
 			<id>sonatype-nexus-snapshots</id>
