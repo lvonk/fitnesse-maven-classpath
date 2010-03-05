@@ -33,18 +33,19 @@
 			<version>3.1</version>
 		</dependency>
 	</dependencies>
-	<repositories>
-		<repository>
-			<id>neuri</id>
-			<url>http://maven.neuri.com/</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
+<!--	ADD THIS IF YOU NEED TO DOWNLOAD FITNESSE JARS  -->
+<!--	<repositories>-->
+<!--		<repository>-->
+<!--			<id>neuri</id>-->
+<!--			<url>http://maven.neuri.com/</url>-->
+<!--			<releases>-->
+<!--				<enabled>true</enabled>-->
+<!--			</releases>-->
+<!--			<snapshots>-->
+<!--				<enabled>false</enabled>-->
+<!--			</snapshots>-->
+<!--		</repository>-->
+<!--	</repositories>-->
 	<build>
 		<plugins>
 			<plugin>
