@@ -3,7 +3,7 @@
 	<groupId>com.github.joel1di1</groupId>
 	<artifactId>maven-classpath-plugin</artifactId>
 	<name>Maven classpath plugin for FitNesse</name>
-	<version>1.2.3</version>
+	<version>1.2.4-SNAPSHOT</version>
 	<description>A FitNesse Plugin that generate classpath from a pomFile.</description>
 	<url>http://github.com/joel1di1/fitnesse-maven-classpath</url>
 	<inceptionYear>2009</inceptionYear>
