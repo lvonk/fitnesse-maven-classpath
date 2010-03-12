@@ -61,8 +61,9 @@ public class MavenClasspathWidgetTest extends WidgetTestCase {
 
   public void testRender() throws Exception {
     String actual = widget.render();
-    String expected = metaText("classpath: " + TEST_PROJECT_ROOT
-        + "/target/classes")
+    String expected = metaText("classpath: " + TEST_PROJECT_ROOT + "/target/test-classes")
+        + BRtag
+        + metaText("classpath: " + TEST_PROJECT_ROOT + "/target/classes")
         + BRtag
         + metaText(classpathElementForRender("/fitnesse/fitnesse-dep/1.0/fitnesse-dep-1.0.jar"))
         + BRtag
@@ -73,8 +74,9 @@ public class MavenClasspathWidgetTest extends WidgetTestCase {
 
   public void testGetText() throws Exception {
     String actual = widget.getText();
-    String expected = TEST_PROJECT_ROOT
-        + "/target/classes"
+    String expected = TEST_PROJECT_ROOT + "/target/test-classes"
+    	+ ":"
+        + TEST_PROJECT_ROOT + "/target/classes"
         + classpathElementForText("/fitnesse/fitnesse-dep/1.0/fitnesse-dep-1.0.jar")
         + classpathElementForText("/fitnesse/fitnesse-subdep/1.0/fitnesse-subdep-1.0.jar");
     assertEquals(expected, actual);

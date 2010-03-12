@@ -112,7 +112,7 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
       throws MavenEmbedderException, DependencyResolutionRequiredException {
     MavenEmbedder embedder = new MavenEmbedder(configuration);
     MavenExecutionResult executionResult = embedder.readProjectWithDependencies(request);
-    List<String> classpathElements = executionResult.getProject().getCompileClasspathElements();
+    List<String> classpathElements = executionResult.getProject().getTestClasspathElements();
     return classpathElements;
   }
 
