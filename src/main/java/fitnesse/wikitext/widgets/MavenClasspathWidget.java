@@ -1,6 +1,6 @@
 package fitnesse.wikitext.widgets;
 
-import static org.apache.maven.embedder.MavenEmbedder.validateConfiguration;
+import static org.apache.maven.embedder.MavenEmbedder.*;
 
 import java.io.File;
 import java.util.List;
@@ -17,6 +17,7 @@ import org.apache.maven.embedder.MavenEmbedderException;
 import org.apache.maven.execution.DefaultMavenExecutionRequest;
 import org.apache.maven.execution.MavenExecutionRequest;
 import org.apache.maven.execution.MavenExecutionResult;
+import org.apache.maven.settings.Settings;
 
 import fitnesse.html.HtmlUtil;
 import fitnesse.wiki.PageData;
@@ -29,6 +30,9 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
   }
   
   private String pomFile;
+	private File userSettingsFile = MavenEmbedder.DEFAULT_USER_SETTINGS_FILE;
+	private File globalSettingsFile = MavenEmbedder.DEFAULT_GLOBAL_SETTINGS_FILE;
+	
   public static final String REGEXP = "^!pomFile [^\r\n]*";
   private static final Pattern pattern = Pattern.compile("^!pomFile (.*)");
 
@@ -61,14 +65,12 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
     return WidgetBuilder.variableEvaluatorWidgetBuilder;
   }
 
-
   public String getText() throws Exception {
     List<String> classpathElements = getMavenClasspath();
     return createClasspath(classpathElements);
   }
 
-  private List<String> getMavenClasspath() throws MavenEmbedderException,
-      DependencyResolutionRequiredException {
+  private List<String> getMavenClasspath() throws MavenEmbedderException, DependencyResolutionRequiredException {
     Configuration configuration = mavenConfiguration();
     ensureMavenConfigurationIsValid(configuration);
     MavenExecutionRequest request = createExecutionRequest(projectRootDirectory());
@@ -90,10 +92,14 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
   }
 
   private void ensureMavenConfigurationIsValid(Configuration configuration) {
-    ConfigurationValidationResult validationResult = validateConfiguration(configuration);
+    ConfigurationValidationResult validationResult = validateMavenConfiguration(configuration);
     if (!validationResult.isValid()) {
       throw new IllegalStateException("Unable to create valid Maven Configuration.");
     }
+  }
+
+	private ConfigurationValidationResult validateMavenConfiguration(Configuration configuration) {
+	  return validateConfiguration(configuration);
   }
   
   private String createClasspath(List<String> classpathElements) {
@@ -112,6 +118,7 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
       throws MavenEmbedderException, DependencyResolutionRequiredException {
     MavenEmbedder embedder = new MavenEmbedder(configuration);
     MavenExecutionResult executionResult = embedder.readProjectWithDependencies(request);
+    @SuppressWarnings("unchecked")
     List<String> classpathElements = executionResult.getProject().getTestClasspathElements();
     return classpathElements;
   }
@@ -123,29 +130,65 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
   }
 
   private MavenExecutionRequest createExecutionRequest(File projectDirectory) {
-    MavenExecutionRequest request = new DefaultMavenExecutionRequest().setBaseDirectory(projectDirectory).setPomFile(
-        pomFile);
-    return request;
+    return new DefaultMavenExecutionRequest().setBaseDirectory(projectDirectory).setPomFile(pomFile);
   }
 
-  private Configuration mavenConfiguration() {
-    Configuration configuration = new DefaultConfiguration().setClassLoader(Thread.currentThread()
-        .getContextClassLoader()).setMavenEmbedderLogger(new MavenEmbedderConsoleLogger());
-    if(hasNonDefaultLocalRepository()) {
-      configuration.setLocalRepository(getLocalRepository());
+  // protected for test purposes
+  protected Configuration mavenConfiguration() {
+    Configuration configuration = new DefaultConfiguration()
+      .setUserSettingsFile(userSettingsFile)
+      .setClassLoader(Thread.currentThread().getContextClassLoader())
+    	.setMavenEmbedderLogger(new MavenEmbedderConsoleLogger());
+    
+    if (globalSettingsFile != null && globalSettingsFile.exists()) {
+    	configuration.setGlobalSettingsFile(globalSettingsFile);
     }
+    
+    if (hasNonDefaultLocalRepository(configuration)) {
+      configuration.setLocalRepository(getLocalRepository(configuration));
+    }
+    
     return configuration;
   }
 
-  private boolean hasNonDefaultLocalRepository() {
-    return getLocalRepository() != null;
+  private boolean hasNonDefaultLocalRepository(Configuration configuration) {
+    return getLocalRepository(configuration) != null;
   }
+  
   /*
    * can be overridden for test purposes.
    */
-  protected File getLocalRepository() {
-    return null;
+  protected File getLocalRepository(Configuration configuration) {
+  	String localRepositoryPath = null;
+
+  	ConfigurationValidationResult validateMavenConfiguration = validateMavenConfiguration(configuration);
+  	Settings userSettings = validateMavenConfiguration.getUserSettings();
+  	
+		if (userSettings != null) {
+			localRepositoryPath = userSettings.getLocalRepository();
+		} else {
+			Settings globalSettings = validateMavenConfiguration.getGlobalSettings();
+			localRepositoryPath = globalSettings.getLocalRepository();
+		}
+		
+		return getLocalRepositoryLocation(localRepositoryPath);
+  }
+
+	private File getLocalRepositoryLocation(String localRepositoryPath) {
+	  if (localRepositoryPath == null) {
+			return MavenEmbedder.defaultUserLocalRepository;
+		}
+		
+  	return new File(localRepositoryPath);
   }
   
+  // protected for test purposes
+  protected void setMavenUserSettingsFile(File userSettingsFile) {
+  	this.userSettingsFile = userSettingsFile;
+	}
 
+  // protected for test purposes
+  protected void setMavenGlobalSettingsFile(File globalSettingsFile) {
+  	this.globalSettingsFile = globalSettingsFile;
+  }
 }

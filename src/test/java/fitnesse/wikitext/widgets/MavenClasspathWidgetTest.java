@@ -1,10 +1,16 @@
 package fitnesse.wikitext.widgets;
 
-import static fitnesse.html.HtmlUtil.BRtag;
-import static fitnesse.html.HtmlUtil.metaText;
+import static fitnesse.html.HtmlUtil.*;
+import static org.hamcrest.CoreMatchers.*;
+
+import static org.junit.Assert.*;
 
 import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 
+import org.apache.maven.embedder.Configuration;
+import org.apache.maven.embedder.MavenEmbedder;
 import org.codehaus.plexus.util.FileUtils;
 
 import fitnesse.wiki.PageData;
@@ -13,8 +19,7 @@ public class MavenClasspathWidgetTest extends WidgetTestCase {
   private static final String TEST_PROJECT_ROOT = new File(
       "src/test/resources/MavenClasspathWidget").getAbsolutePath();
   private final static String TEST_POM_FILE = "src/test/resources/MavenClasspathWidget/pom.xml";
-  private File mavenLocalRepo = new File(System.getProperty("java.io.tmpdir"),
-      "MavenClasspathWidgetTest/m2/repo");
+  private File mavenLocalRepo = new File(System.getProperty("java.io.tmpdir"), "MavenClasspathWidgetTest/m2/repo");
   private String path = mavenLocalRepo.getAbsolutePath();
 
   private MavenClasspathWidget widget;
@@ -22,10 +27,9 @@ public class MavenClasspathWidgetTest extends WidgetTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    widget = new MavenClasspathWidget(new MockWidgetRoot(), "!pomFile "
-        + TEST_POM_FILE) {
+    widget = new MavenClasspathWidget(new MockWidgetRoot(), "!pomFile " + TEST_POM_FILE) {
       @Override
-      protected File getLocalRepository() {
+      protected File getLocalRepository(Configuration configuration) {
         return mavenLocalRepo;
       }
     };
@@ -104,12 +108,50 @@ public class MavenClasspathWidgetTest extends WidgetTestCase {
     widget = new MavenClasspathWidget(new MockWidgetRoot(),
         "!pomFile ${MY_PATH}/MavenClasspathWidget/pom.xml") {
       @Override
-      protected File getLocalRepository() {
+      protected File getLocalRepository(Configuration configuration) {
         return mavenLocalRepo;
       }
     };
     String html = widget.childHtml();
     assertEquals(TEST_POM_FILE, html);
+  }
+  
+  public void testShouldSupportLocalMavenRepositoryFromUserSettings() throws Exception {
+  	File userSettingsFile = getSettingsFile("/user-settings.xml");
+  	widget = new MavenClasspathWidget(new MockWidgetRoot(), "!pomFile " + TEST_POM_FILE);
+  	widget.setMavenUserSettingsFile(userSettingsFile);
+  	widget.setMavenGlobalSettingsFile(null);
+  	assertThat(widget.getLocalRepository(widget.mavenConfiguration()).toString(), is("/tmp/fitnesse-maven-classpath/user-repository"));
+  }
+
+  public void testShouldSupportLocalMavenRepositoryFromGlobalSettings() throws Exception {
+  	File globalSettingsFile = getSettingsFile("/global-settings.xml");
+  	widget = new MavenClasspathWidget(new MockWidgetRoot(), "!pomFile " + TEST_POM_FILE);
+  	widget.setMavenUserSettingsFile(null);
+  	widget.setMavenGlobalSettingsFile(globalSettingsFile);
+  	assertThat(widget.getLocalRepository(widget.mavenConfiguration()).toString(), is("/tmp/fitnesse-maven-classpath/global-repository"));
+  }
+
+  public void testShouldSupportPreferLocalRepoFromUserSettingsAboveGlobalSettings() throws Exception {
+  	File globalSettingsFile = getSettingsFile("/global-settings.xml");
+  	File userSettingsFile = getSettingsFile("/user-settings.xml");
+  	widget = new MavenClasspathWidget(new MockWidgetRoot(), "!pomFile " + TEST_POM_FILE);
+  	widget.setMavenUserSettingsFile(userSettingsFile);
+  	widget.setMavenGlobalSettingsFile(globalSettingsFile);
+  	assertThat(widget.getLocalRepository(widget.mavenConfiguration()).toString(), is("/tmp/fitnesse-maven-classpath/user-repository"));
+  }
+
+  public void testShouldFallBackToDefaultRepositoryLocationWhenNotConfigured() throws Exception {
+  	URI uri = this.getClass().getResource("/settings-without-local-repo.xml").toURI();
+  	File settingsFile = new File(uri);
+  	widget = new MavenClasspathWidget(new MockWidgetRoot(), "!pomFile " + TEST_POM_FILE);
+  	widget.setMavenUserSettingsFile(settingsFile);
+  	assertThat(widget.getLocalRepository(widget.mavenConfiguration()), is(MavenEmbedder.defaultUserLocalRepository));
+  }
+
+  private File getSettingsFile(String path) throws URISyntaxException {
+  	URI settingsFileUri = this.getClass().getResource(path).toURI();
+  	return new File(settingsFileUri);
   }
 
   private String classpathElementForRender(String file) {
