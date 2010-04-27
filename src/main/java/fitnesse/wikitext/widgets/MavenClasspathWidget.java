@@ -166,9 +166,11 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
   	
 		if (userSettings != null) {
 			localRepositoryPath = userSettings.getLocalRepository();
-		} else {
+		} else if (validateMavenConfiguration.getGlobalSettings() != null) {
 			Settings globalSettings = validateMavenConfiguration.getGlobalSettings();
 			localRepositoryPath = globalSettings.getLocalRepository();
+		} else {
+			return MavenEmbedder.defaultUserLocalRepository;
 		}
 		
 		return getLocalRepositoryLocation(localRepositoryPath);

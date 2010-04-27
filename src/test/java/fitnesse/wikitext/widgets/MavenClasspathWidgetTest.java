@@ -148,6 +148,15 @@ public class MavenClasspathWidgetTest extends WidgetTestCase {
   	widget.setMavenUserSettingsFile(settingsFile);
   	assertThat(widget.getLocalRepository(widget.mavenConfiguration()), is(MavenEmbedder.defaultUserLocalRepository));
   }
+  
+  public void testShouldFallBackToDefaultRepositoryLocationWhenBothSettingsFilesDoNotExist() throws Exception {
+  	File globalSettingsFile = new File("/non-existing-global-settings.xml");
+  	File userSettingsFile = new File("/non-existing-user-settings.xml");
+  	widget = new MavenClasspathWidget(new MockWidgetRoot(), "!pomFile " + TEST_POM_FILE);
+  	widget.setMavenUserSettingsFile(userSettingsFile);
+  	widget.setMavenGlobalSettingsFile(globalSettingsFile);
+  	assertThat(widget.getLocalRepository(widget.mavenConfiguration()), is(MavenEmbedder.defaultUserLocalRepository));
+  }
 
   private File getSettingsFile(String path) throws URISyntaxException {
   	URI settingsFileUri = this.getClass().getResource(path).toURI();
