@@ -94,6 +94,7 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
   private void ensureMavenConfigurationIsValid(Configuration configuration) {
     ConfigurationValidationResult validationResult = validateMavenConfiguration(configuration);
     if (!validationResult.isValid()) {
+    	System.out.println("User settings file: " + userSettingsFile);
       throw new IllegalStateException("Unable to create valid Maven Configuration.");
     }
   }
@@ -136,10 +137,12 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
   // protected for test purposes
   protected Configuration mavenConfiguration() {
     Configuration configuration = new DefaultConfiguration()
-      .setUserSettingsFile(userSettingsFile)
       .setClassLoader(Thread.currentThread().getContextClassLoader())
     	.setMavenEmbedderLogger(new MavenEmbedderConsoleLogger());
     
+    if (userSettingsFile != null && userSettingsFile.exists()) {
+    	configuration.setUserSettingsFile(userSettingsFile);
+    }
     if (globalSettingsFile != null && globalSettingsFile.exists()) {
     	configuration.setGlobalSettingsFile(globalSettingsFile);
     }
