@@ -70,16 +70,16 @@ public class MavenClasspathWidgetTest extends WidgetTestCase {
 
   public void testRender() throws Exception {
     String actual = widget.render();
-    String expected = metaText("classpath: " + TEST_PROJECT_ROOT + "/target/classes") + BRtag
-        + metaText(classpathElementForRender("/fitnesse/fitnesse-dep/1.0/fitnesse-dep-1.0.jar")) + BRtag
-        + metaText(classpathElementForRender("/fitnesse/fitnesse-subdep/1.0/fitnesse-subdep-1.0.jar")) + BRtag;
+    String expected = metaText("classpath: " + new File(TEST_PROJECT_ROOT + "/target/classes")) + BRtag
+        + metaText(classpathElementForRender(new File("/fitnesse/fitnesse-dep/1.0/fitnesse-dep-1.0.jar").toString())) + BRtag
+        + metaText(classpathElementForRender(new File("/fitnesse/fitnesse-subdep/1.0/fitnesse-subdep-1.0.jar").toString())) + BRtag;
     assertEquals(expected, actual);
   }
 
   public void testGetText() throws Exception {
     String actual = widget.getText();
-    String expected = TEST_PROJECT_ROOT + "/target/classes" + classpathElementForText("/fitnesse/fitnesse-dep/1.0/fitnesse-dep-1.0.jar")
-        + classpathElementForText("/fitnesse/fitnesse-subdep/1.0/fitnesse-subdep-1.0.jar");
+    String expected = TEST_PROJECT_ROOT + new File("/target/classes") + classpathElementForText(new File("/fitnesse/fitnesse-dep/1.0/fitnesse-dep-1.0.jar").toString())
+        + classpathElementForText(new File("/fitnesse/fitnesse-subdep/1.0/fitnesse-subdep-1.0.jar").toString());
     assertEquals(expected, actual);
   }
 
