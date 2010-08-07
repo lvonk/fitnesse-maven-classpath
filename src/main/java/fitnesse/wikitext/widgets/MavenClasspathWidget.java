@@ -153,8 +153,7 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
   }
 
   private File projectRootDirectory() {
-    String root = pomFile.substring(0, pomFile.lastIndexOf("/"));
-    File projectDirectory = new File(root);
+    File projectDirectory = new File(pomFile).getParentFile();
     return projectDirectory;
   }
 
