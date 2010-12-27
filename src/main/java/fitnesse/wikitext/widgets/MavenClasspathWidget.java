@@ -57,22 +57,20 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
     super(parent);
     Matcher matcher = pattern.matcher(text);
     if (matcher.find()) {
-      String matchedGroup = matcher.group(1);
-      addChildWidgets(matchedGroup);
-      this.pomFile = childHtml();
-      ensurePomFileExists();
+      this.pomFile = matcher.group(1);
+      addChildWidgets(this.pomFile);
     } else {
       throw new IllegalArgumentException("no pom file specified.");
     }
   }
 
-  private void ensurePomFileExists() {
+  private void ensurePomFileExists(String finalPomUrl) {
     // TODO: check that the link really exist
-    if (pomFile.startsWith("http://")) {
+    if (finalPomUrl.startsWith("http://")) {
       return;
     }
-    if (!new File(pomFile).exists()) {
-      throw new IllegalArgumentException(pomFile + " does not exist");
+    if (!new File(finalPomUrl).exists()) {
+      throw new IllegalArgumentException(finalPomUrl + " does not exist");
     }
   }
 
@@ -91,18 +89,20 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
     return createClasspath(classpathElements);
   }
 
-  private List<String> getMavenClasspath() throws MavenEmbedderException, DependencyResolutionRequiredException, XmlPullParserException, IOException, DownloadException {
+  protected List<String> getMavenClasspath() throws MavenEmbedderException, DependencyResolutionRequiredException, XmlPullParserException, IOException, DownloadException {
     Configuration configuration = downloader.createConfiguration();
+    String pomFinalUri = childHtmlSafe();
+    ensurePomFileExists(pomFinalUri);
     ensureMavenConfigurationIsValid(configuration);
 
-    List<String> classpathElements = getClasspathElements(configuration);
+    List<String> classpathElements = getClasspathElements(configuration, pomFinalUri);
     return classpathElements;
   }
 
-  private List<String> getClasspathElements(Configuration configuration) throws MavenEmbedderException, DependencyResolutionRequiredException, XmlPullParserException, IOException, DownloadException  {
+  private  List<String> getClasspathElements(Configuration configuration, String pomFinalUri) throws MavenEmbedderException, DependencyResolutionRequiredException, XmlPullParserException, IOException, DownloadException  {
     List<String> classpathElements;
-    if (pomFile.startsWith("http://")) {
-      classpathElements = downloader.getArtifactAndDependencies(pomFile);
+    if (pomFinalUri.startsWith("http://")) {
+		classpathElements = downloader.getArtifactAndDependencies(pomFinalUri);
     } else {
       MavenExecutionRequest request = createExecutionRequest(projectRootDirectory());
       classpathElements = getClasspathElements(configuration, request);
@@ -110,7 +110,15 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
     return classpathElements;
   }
 
-  @Override
+  private String childHtmlSafe() {
+	  try {
+		return childHtml();
+	} catch (Exception e) {
+		throw new RuntimeException("Impossible to retrieve pom from "+pomFile);
+	}
+}
+
+@Override
   public String render() throws MavenEmbedderException, DependencyResolutionRequiredException, XmlPullParserException, IOException {
     List<String> classpathElements;
     try {

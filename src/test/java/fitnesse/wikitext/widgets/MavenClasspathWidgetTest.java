@@ -83,9 +83,10 @@ public class MavenClasspathWidgetTest extends WidgetTestCase {
     assertEquals(expected, actual);
   }
 
-  public void testFailFastWhenPomFileDoesNotExist() throws Exception {
+  public void testFailWhenPomFileDoesNotExist() throws Exception {
     try {
-      new MavenClasspathWidget(new MockWidgetRoot(), "!pomFile /non/existing/pom.xml");
+      MavenClasspathWidget mavenClasspathWidget = new MavenClasspathWidget(new MockWidgetRoot(), "!pomFile /non/existing/pom.xml");
+      mavenClasspathWidget.getMavenClasspath();
       fail("should have thrown IllegalArgumentException");
     } catch (IllegalArgumentException expected) {
     }
