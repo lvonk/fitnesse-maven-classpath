@@ -1,8 +1,7 @@
 package fitnesse.wikitext.widgets;
 
 import fitnesse.html.HtmlUtil;
-import fitnesse.wiki.PageData;
-import fitnesse.wikitext.WidgetBuilder;
+import fitnesse.wikitext.parser.*;
 import hudson.maven.MavenEmbedderException;
 import hudson.maven.MavenRequest;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
@@ -12,86 +11,65 @@ import org.apache.maven.execution.MavenExecutionRequest;
 import org.apache.maven.project.ProjectBuildingException;
 import org.apache.maven.project.ProjectBuildingResult;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
+import util.Maybe;
 
 import java.io.File;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-public class MavenClasspathWidget extends ParentWidget implements WidgetWithTextArgument {
-
-    private DependencyResolvingMavenEmbedder mavenEmbedder;
-
-//    static {
- //       PageData.classpathWidgetBuilder.addWidgetClass(MavenClasspathWidget.class);
-
- //   }
+/**
+ * FitNesse SymbolType implementation which enables Maven classpath integration for FitNesse.
+ */
+public class MavenClasspathSymbolType extends SymbolType implements Rule, Translation {
 
     private String pomFile;
     private File userSettingsFile = MavenCli.DEFAULT_USER_SETTINGS_FILE;
     private File globalSettingsFile = MavenCli.DEFAULT_GLOBAL_SETTINGS_FILE;
 
-    public static final String REGEXP = "^!pomFile [^\r\n]*";
-    private static final Pattern pattern = Pattern.compile("^!pomFile (.*)");
 
-    public MavenClasspathWidget(ParentWidget parent, String text) throws Exception {
-        super(parent);
+    public MavenClasspathSymbolType() {
+        super("MavenClasspathSymbolType");
 
-        Matcher matcher = pattern.matcher(text);
-        if (matcher.find()) {
-            String matchedGroup = matcher.group(1);
-            addChildWidgets(matchedGroup);
-            this.pomFile = childHtml();
-            ensurePomFileExists();
-        } else {
-            throw new IllegalArgumentException("no pom file specified.");
-        }
+        wikiMatcher(new Matcher().startLineOrCell().string("!pomFile"));
+
+        wikiRule(this);
+        htmlTranslation(this);
     }
 
-    private void ensurePomFileExists() {
-        if (!new File(pomFile).exists()) {
-            throw new IllegalArgumentException(pomFile + " does not exist");
+    @Override
+    public String toTarget(Translator translator, Symbol symbol) {
+        pomFile = symbol.childAt(0).getContent();
+
+        try {
+            List<String> classpathElements = getMavenClasspath();
+
+            String classpathForRender = "";
+            for (String element : classpathElements) {
+                classpathForRender += HtmlUtil.metaText("classpath: " + element) + HtmlUtil.BRtag;
+
+            }
+            return classpathForRender;
+
+        } catch (DependencyResolutionRequiredException e) {
+            throw new IllegalArgumentException(e);
+        } catch (MavenEmbedderException e) {
+            throw new IllegalArgumentException(e);
+        } catch (ProjectBuildingException e) {
+            throw new IllegalArgumentException(e);
+        } catch (ComponentLookupException e) {
+            throw new IllegalArgumentException(e);
         }
     }
 
     @Override
-    public String asWikiText() throws Exception {
-        return "!pomFile " + pomFile;
-    }
+    public Maybe<Symbol> parse(Symbol symbol, Parser parser) {
+        Symbol next = parser.moveNext(1);
 
-    @Override
-    public WidgetBuilder getBuilder() {
-        return WidgetBuilder.variableEvaluatorWidgetBuilder;
-    }
+        if (!next.isType(SymbolType.Whitespace)) return Symbol.nothing;
 
-    public String getText() throws Exception {
-        List<String> classpathElements = getMavenClasspath();
-        return createClasspath(classpathElements);
-    }
+        symbol.add(parser.moveNext(1).getContent());
 
-    private List<String> getMavenClasspath() throws DependencyResolutionRequiredException, MavenEmbedderException, ProjectBuildingException, ComponentLookupException {
-        MavenRequest mavenRequest = mavenConfiguration();
-        mavenRequest.setResolveDependencies(true);
-        mavenRequest.setBaseDirectory(projectRootDirectory().getAbsolutePath());
-        mavenRequest.setPom(new File(projectRootDirectory(), "pom.xml").getAbsolutePath());
 
-        DependencyResolvingMavenEmbedder dependencyResolvingMavenEmbedder = new DependencyResolvingMavenEmbedder(getClass().getClassLoader(), mavenRequest);
-
-        ProjectBuildingResult projectBuildingResult = dependencyResolvingMavenEmbedder.buildProject(new File(projectRootDirectory(), "pom.xml"));
-        return projectBuildingResult.getProject().getTestClasspathElements();
-    }
-
-    @Override
-    public String render() throws Exception {
-        List<String> classpathElements = getMavenClasspath();
-
-        String classpathForRender = "";
-        for (String element : classpathElements) {
-            classpathForRender += HtmlUtil.metaText("classpath: " + element) + HtmlUtil.BRtag;
-
-        }
-        return classpathForRender;
-
+        return new Maybe<Symbol>(symbol);
     }
 
     private String createClasspath(List<String> classpathElements) {
@@ -150,4 +128,20 @@ public class MavenClasspathWidget extends ParentWidget implements WidgetWithText
     protected void setMavenGlobalSettingsFile(File globalSettingsFile) {
         this.globalSettingsFile = globalSettingsFile;
     }
+
+    private List<String> getMavenClasspath() throws DependencyResolutionRequiredException, MavenEmbedderException, ProjectBuildingException, ComponentLookupException {
+        MavenRequest mavenRequest = mavenConfiguration();
+        mavenRequest.setResolveDependencies(true);
+        mavenRequest.setBaseDirectory(projectRootDirectory().getAbsolutePath());
+        mavenRequest.setPom(new File(projectRootDirectory(), "pom.xml").getAbsolutePath());
+
+        DependencyResolvingMavenEmbedder dependencyResolvingMavenEmbedder = new DependencyResolvingMavenEmbedder(getClass().getClassLoader(), mavenRequest);
+
+        ProjectBuildingResult projectBuildingResult = dependencyResolvingMavenEmbedder.buildProject(new File(projectRootDirectory(), "pom.xml"));
+        return projectBuildingResult.getProject().getTestClasspathElements();
+    }
+
+
 }
+
+
