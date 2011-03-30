@@ -152,10 +152,10 @@ public class DependencyResolvingMavenEmbedder {
         }
 
         // FIXME
-        this.mavenExecutionRequest.setLoggingLevel(MavenExecutionRequest.LOGGING_LEVEL_DEBUG);
+        this.mavenExecutionRequest.setLoggingLevel(MavenExecutionRequest.LOGGING_LEVEL_WARN);
 
         // FIXME
-        lookup(Logger.class).setThreshold(0);
+        lookup(Logger.class).setThreshold(Logger.LEVEL_WARN);
 
         this.mavenExecutionRequest.setExecutionListener(this.mavenRequest.getExecutionListener())
                 .setInteractiveMode(this.mavenRequest.isInteractive())
