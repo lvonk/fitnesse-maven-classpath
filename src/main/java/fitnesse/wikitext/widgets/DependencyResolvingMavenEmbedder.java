@@ -48,16 +48,11 @@ public class DependencyResolvingMavenEmbedder {
     public static final String userHome = System.getProperty("user.home");
 
     private MavenXpp3Reader modelReader;
-
     private MavenXpp3Writer modelWriter;
 
-
     private final File mavenHome;
-
     private final PlexusContainer plexusContainer;
-
     private final MavenRequest mavenRequest;
-
     private MavenExecutionRequest mavenExecutionRequest;
     private final MavenSession mavenSession;
 
@@ -151,10 +146,8 @@ public class DependencyResolvingMavenEmbedder {
             }
         }
 
-        // FIXME
         this.mavenExecutionRequest.setLoggingLevel(MavenExecutionRequest.LOGGING_LEVEL_WARN);
 
-        // FIXME
         lookup(Logger.class).setThreshold(Logger.LEVEL_WARN);
 
         this.mavenExecutionRequest.setExecutionListener(this.mavenRequest.getExecutionListener())
@@ -169,12 +162,6 @@ public class DependencyResolvingMavenEmbedder {
         if (this.mavenRequest.getWorkspaceReader() != null) {
             this.mavenExecutionRequest.setWorkspaceReader(this.mavenRequest.getWorkspaceReader());
         }
-
-        // FIXME inactive profiles
-
-        //this.mavenExecutionRequest.set
-
-
     }
 
 
