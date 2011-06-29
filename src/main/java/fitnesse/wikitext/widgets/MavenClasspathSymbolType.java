@@ -53,6 +53,11 @@ public class MavenClasspathSymbolType extends SymbolType implements Rule, Transl
         return new Maybe<Symbol>(symbol);
     }
 
+    @Override
+    public boolean matchesFor(SymbolType symbolType) {
+        return symbolType instanceof Path || super.matchesFor(symbolType);
+    }
+    
 
     /**
      * Exposed for testing

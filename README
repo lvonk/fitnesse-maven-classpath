@@ -4,15 +4,9 @@
 
 2. How to use.
 
-    For the current head (does *NOT* work on fitnesse v20110104!):
-    - Get the latest from fitnesse from git (https://github.com/unclebob/fitnesse) and compile with: ant jar
-    - Add the following line to plugins.properties: SymbolTypes = fitnesse.wikitext.widgets.MavenClasspathSymbolType.
-    - Copy the maven-classpath-plugin-[version]-jar-with-dependencies.jar to the plugins directory of the directory where the fitnesse.jar is located.
-    - Start FitNesse: java -jar fitnesse.jar
-    - Refer to the pom file as follows: !pomFile /path/to/pom.xml.
-    - The plugin will use the test classpath from the pom as classpath in FitNesse.
+    Releases after v20101101 are NOT supported, since the way the classpath is completely refactored in FitNesse. Working on it...
 
-    LATEST STABLE For v20101101 and earlier:
+    For v20101101 and earlier:
     - Download the 1.2 distribution.
     - Add the following line to plugins.properties: WikiWidgets = fitnesse.wikitext.widgets.MavenClasspathWidget.
     - Copy the maven-classpath-plugin-[version]-jar-with-dependencies.jar to the plugins directory of the directory where the fitnesse.jar is located.
