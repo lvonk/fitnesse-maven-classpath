@@ -12,7 +12,7 @@
     - Refer to the pom file as follows: !pomFile /path/to/pom.xml.
     - The plugin will use the test classpath from the pom as classpath in FitNesse.
 
-    For v20101101 and earlier:
+    LATEST STABLE For v20101101 and earlier:
     - Download the 1.2 distribution.
     - Add the following line to plugins.properties: WikiWidgets = fitnesse.wikitext.widgets.MavenClasspathWidget.
     - Copy the maven-classpath-plugin-[version]-jar-with-dependencies.jar to the plugins directory of the directory where the fitnesse.jar is located.
