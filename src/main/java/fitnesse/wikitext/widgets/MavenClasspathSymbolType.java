@@ -40,8 +40,15 @@ public class MavenClasspathSymbolType extends SymbolType implements Rule, Transl
 
 	private List<String> getClasspathElements(Symbol symbol) {
         String pomFile = symbol.childAt(0).getContent();
+		String scope = MavenClasspathExtractor.DEFAULT_SCOPE;
 
-		return mavenClasspathExtractor.extractClasspathEntries(new File(pomFile));
+		if (pomFile.contains("@")) {
+        	String[] s = pomFile.split("@");
+        	pomFile = s[0];
+        	scope = s[1];
+        }
+
+		return mavenClasspathExtractor.extractClasspathEntries(new File(pomFile), scope);
 	}
 
     @Override
