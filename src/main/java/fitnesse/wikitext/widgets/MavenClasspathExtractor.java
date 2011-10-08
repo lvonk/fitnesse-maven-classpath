@@ -3,6 +3,7 @@ package fitnesse.wikitext.widgets;
 import hudson.maven.MavenEmbedderException;
 import hudson.maven.MavenRequest;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
+import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectBuildingException;
 import org.apache.maven.project.ProjectBuildingResult;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
@@ -16,10 +17,16 @@ import java.util.List;
  */
 public class MavenClasspathExtractor {
 
+	public final static String DEFAULT_SCOPE = "test";
+	
     private File userSettingsFile;
     private File globalSettingsFile;
 
-    public List<String> extractClasspathEntries(File pomFile) throws MavenClasspathExtractionException {
+	public List<String> extractClasspathEntries(File pomFile) {
+		return extractClasspathEntries(pomFile, DEFAULT_SCOPE);
+	}
+
+    public List<String> extractClasspathEntries(File pomFile, String scope) throws MavenClasspathExtractionException {
 
         try {
             MavenRequest mavenRequest = mavenConfiguration();
@@ -31,7 +38,7 @@ public class MavenClasspathExtractor {
                     new DependencyResolvingMavenEmbedder(getClass().getClassLoader(), mavenRequest);
 
             ProjectBuildingResult projectBuildingResult = dependencyResolvingMavenEmbedder.buildProject(pomFile);
-            return projectBuildingResult.getProject().getTestClasspathElements();
+            return getClasspathForScope(projectBuildingResult, scope);
 
         } catch (MavenEmbedderException mee) {
             throw new MavenClasspathExtractionException(mee);
@@ -42,10 +49,23 @@ public class MavenClasspathExtractor {
         } catch (ProjectBuildingException e) {
             throw new MavenClasspathExtractionException(e);
         }
-
     }
 
+	private List<String> getClasspathForScope(
+			ProjectBuildingResult projectBuildingResult, String scope)
+			throws DependencyResolutionRequiredException {
+		MavenProject project = projectBuildingResult.getProject();
+		
+		if ("compile".equalsIgnoreCase(scope)) {
+			return project.getCompileClasspathElements();
+		} else if ("runtime".equalsIgnoreCase(scope)) {
+			return project.getRuntimeClasspathElements();
+		}
+		return project.getTestClasspathElements();
+		
+	}
 
+    
     // protected for test purposes
     protected MavenRequest mavenConfiguration() throws MavenEmbedderException, ComponentLookupException {
         MavenRequest mavenRequest = new MavenRequest();
@@ -80,6 +100,5 @@ public class MavenClasspathExtractor {
     protected void setMavenGlobalSettingsFile(File globalSettingsFile) {
         this.globalSettingsFile = globalSettingsFile;
     }
-
 
 }

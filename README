@@ -4,7 +4,11 @@
 
 2. How to use.
 
-    Releases after v20101101 are NOT supported, since the way the classpath is completely refactored in FitNesse. Working on it...
+    - Download the distribution.
+    - Get yourself an up-to-date copy of fitnesse (> 20110601)
+    - Add the following line to plugins.properties: SymbolTypes = fitnesse.wikitext.widgets.MavenClasspathSymbolType.
+    - Refer to the pom file as follows: !pomFile /path/to/pom.xml.
+    - you can define the file as pom.xml@compile to include a specific scope.
 
     For v20101101 and earlier:
     - Download the 1.2 distribution.
