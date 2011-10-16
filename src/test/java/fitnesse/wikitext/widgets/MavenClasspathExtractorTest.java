@@ -32,7 +32,7 @@ public class MavenClasspathExtractorTest {
 
         String path = sb.toString();
 
-        assertEquals(4, classpathEntries.size());
+        assertEquals(3, classpathEntries.size());
         assertTrue(path.contains("commons-lang"));
     }
 
