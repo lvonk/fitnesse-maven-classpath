@@ -33,11 +33,6 @@
   
   <dependencies>
     <dependency>
-      <groupId>org.jvnet.hudson</groupId>
-      <artifactId>hudson-maven-embedder</artifactId>
-      <version>3.2</version>
-    </dependency>
-    <dependency>
       <groupId>org.fitnesse</groupId>
       <artifactId>fitnesse</artifactId>
       <version>20111025</version>
@@ -54,6 +49,13 @@
       <artifactId>mockito-all</artifactId>
       <version>1.8.5</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+    	<groupId>org.apache.maven</groupId>
+    	<artifactId>maven-embedder</artifactId>
+    	<version>3.0.4</version>
+    	<type>jar</type>
+    	<scope>compile</scope>
     </dependency>
   </dependencies>
 

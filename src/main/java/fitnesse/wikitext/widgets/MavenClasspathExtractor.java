@@ -1,54 +1,82 @@
 package fitnesse.wikitext.widgets;
 
-import hudson.maven.MavenEmbedderException;
-import hudson.maven.MavenRequest;
-import org.apache.maven.artifact.DependencyResolutionRequiredException;
-import org.apache.maven.project.MavenProject;
-import org.apache.maven.project.ProjectBuildingException;
-import org.apache.maven.project.ProjectBuildingResult;
-import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
-
 import java.io.File;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
+
+import org.apache.maven.DefaultMaven;
+import org.apache.maven.Maven;
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
+import org.apache.maven.cli.MavenCli;
+import org.apache.maven.execution.DefaultMavenExecutionRequest;
+import org.apache.maven.execution.MavenExecutionRequest;
+import org.apache.maven.execution.MavenExecutionRequestPopulationException;
+import org.apache.maven.execution.MavenExecutionRequestPopulator;
+import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.ProjectBuilder;
+import org.apache.maven.project.ProjectBuildingException;
+import org.apache.maven.project.ProjectBuildingRequest;
+import org.apache.maven.project.ProjectBuildingResult;
+import org.apache.maven.settings.Settings;
+import org.apache.maven.settings.building.DefaultSettingsBuildingRequest;
+import org.apache.maven.settings.building.SettingsBuilder;
+import org.apache.maven.settings.building.SettingsBuildingException;
+import org.apache.maven.settings.building.SettingsBuildingRequest;
+import org.apache.maven.settings.building.SettingsBuildingResult;
+import org.apache.maven.settings.building.SettingsProblem;
+import org.codehaus.plexus.ContainerConfiguration;
+import org.codehaus.plexus.DefaultContainerConfiguration;
+import org.codehaus.plexus.DefaultPlexusContainer;
+import org.codehaus.plexus.PlexusContainer;
+import org.codehaus.plexus.PlexusContainerException;
+import org.codehaus.plexus.classworlds.ClassWorld;
+import org.codehaus.plexus.classworlds.realm.ClassRealm;
+import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
+import org.codehaus.plexus.logging.Logger;
+import org.codehaus.plexus.logging.console.ConsoleLoggerManager;
+import org.codehaus.plexus.util.Os;
+import org.sonatype.aether.RepositorySystemSession;
 
 /**
- * Utiity class to extract classpath elements from Maven projects. Heavily based on code copied from Jenkin's Maven
+ * Utility class to extract classpath elements from Maven projects. Heavily based on code copied from Jenkin's Maven
  * support.
  */
 public class MavenClasspathExtractor {
 
 	public final static String DEFAULT_SCOPE = "test";
-	
-    private File userSettingsFile;
-    private File globalSettingsFile;
 
-	public List<String> extractClasspathEntries(File pomFile) {
+	private final Logger logger = new ConsoleLoggerManager().getLoggerForComponent("maven-classpath-plugin");
+	
+	private PlexusContainer plexusContainer;
+    
+    public MavenClasspathExtractor() throws PlexusContainerException {
+    	plexusContainer = buildPlexusContainer(getClass().getClassLoader(), null);
+    }
+    
+    public List<String> extractClasspathEntries(File pomFile) {
 		return extractClasspathEntries(pomFile, DEFAULT_SCOPE);
 	}
 
     public List<String> extractClasspathEntries(File pomFile, String scope) throws MavenClasspathExtractionException {
 
         try {
-            MavenRequest mavenRequest = mavenConfiguration();
-            mavenRequest.setResolveDependencies(true);
-            mavenRequest.setBaseDirectory(pomFile.getParent());
-            mavenRequest.setPom(pomFile.getAbsolutePath());
+            MavenExecutionRequest mavenExecutionRequest = mavenConfiguration();
+            mavenExecutionRequest.setBaseDirectory(pomFile.getParentFile());
+            mavenExecutionRequest.setPom(pomFile);
 
-            DependencyResolvingMavenEmbedder dependencyResolvingMavenEmbedder =
-                    new DependencyResolvingMavenEmbedder(getClass().getClassLoader(), mavenRequest);
-
-            ProjectBuildingResult projectBuildingResult = dependencyResolvingMavenEmbedder.buildProject(pomFile);
+            ProjectBuildingResult projectBuildingResult = buildProject(pomFile, mavenExecutionRequest);
+            
             return getClasspathForScope(projectBuildingResult, scope);
 
-        } catch (MavenEmbedderException mee) {
-            throw new MavenClasspathExtractionException(mee);
-        } catch (ComponentLookupException cle) {
-            throw new MavenClasspathExtractionException(cle);
+        } catch (ComponentLookupException e) {
+            throw new MavenClasspathExtractionException(e);
         } catch (DependencyResolutionRequiredException e) {
             throw new MavenClasspathExtractionException(e);
         } catch (ProjectBuildingException e) {
             throw new MavenClasspathExtractionException(e);
-        }
+		}
     }
 
 	private List<String> getClasspathForScope(
@@ -65,40 +93,137 @@ public class MavenClasspathExtractor {
 		
 	}
 
+    // protected for test purposes
+    protected MavenExecutionRequest mavenConfiguration() throws MavenClasspathExtractionException {
+        MavenExecutionRequest mavenExecutionRequest = new DefaultMavenExecutionRequest();
+
+    	try {
+			MavenExecutionRequestPopulator executionRequestPopulator = lookup(MavenExecutionRequestPopulator.class);
+	        MavenExecutionRequestPopulator populator = lookup(MavenExecutionRequestPopulator.class);
+	
+	    	mavenExecutionRequest.setInteractiveMode(false);
+	    	
+	    	mavenExecutionRequest.setSystemProperties(System.getProperties());
+	    	mavenExecutionRequest.getSystemProperties().putAll(getEnvVars());
+	    	
+	        Settings settings = getSettings(mavenExecutionRequest);
+	
+	        executionRequestPopulator.populateFromSettings(mavenExecutionRequest, settings);
+	        populator.populateDefaults(mavenExecutionRequest);
+	        
+	        logger.debug( "Local repository " + mavenExecutionRequest.getLocalRepository());
+	
+		} catch (ComponentLookupException e) {
+            throw new MavenClasspathExtractionException(e);
+		} catch (SettingsBuildingException e) {
+            throw new MavenClasspathExtractionException(e);
+		} catch (MavenExecutionRequestPopulationException e) {
+            throw new MavenClasspathExtractionException(e);
+		}
+        return mavenExecutionRequest;
+    }
+
+	private Settings getSettings(MavenExecutionRequest mavenExecutionRequest)
+			throws ComponentLookupException, SettingsBuildingException {
+		
+		SettingsBuildingRequest settingsRequest = new DefaultSettingsBuildingRequest();
+
+		// TODO: should be configurable by system properties?
+		File globalSettingsFile = MavenCli.DEFAULT_GLOBAL_SETTINGS_FILE;
+		File userSettingsFile = MavenCli.DEFAULT_USER_SETTINGS_FILE;
+
+		settingsRequest.setGlobalSettingsFile(globalSettingsFile);
+		settingsRequest.setUserSettingsFile(userSettingsFile);
+
+		settingsRequest.setSystemProperties(mavenExecutionRequest
+				.getSystemProperties());
+		settingsRequest.setUserProperties(mavenExecutionRequest
+				.getUserProperties());
+
+		logger.debug("Reading global settings from " + settingsRequest.getGlobalSettingsFile());
+		logger.debug("Reading user settings from "	+ settingsRequest.getUserSettingsFile());
+
+		SettingsBuilder settingsBuilder = lookup(SettingsBuilder.class);
+
+		SettingsBuildingResult settingsResult = settingsBuilder
+				.build(settingsRequest);
+
+		if (!settingsResult.getProblems().isEmpty()) {
+			logger.warn("");
+			logger.warn("Some problems were encountered while building the effective settings");
+
+			for (SettingsProblem problem : settingsResult.getProblems()) {
+				logger.warn(problem.getMessage() + " @ "
+						+ problem.getLocation());
+			}
+
+			logger.warn("");
+		}
+
+		return settingsResult.getEffectiveSettings();
+	}
+
+    private Properties getEnvVars() {
+        Properties envVars = new Properties();
+        boolean caseSensitive = !Os.isFamily(Os.FAMILY_WINDOWS);
+        for (Map.Entry<String, String> entry : System.getenv().entrySet()) {
+            String key = "env." + (caseSensitive ? entry.getKey() : entry.getKey().toUpperCase(Locale.ENGLISH));
+            envVars.setProperty(key, entry.getValue());
+        }
+        return envVars;
+    }
+
+
+    public ProjectBuildingResult buildProject(File mavenProject, MavenExecutionRequest mavenExecutionRequest) throws ProjectBuildingException, ComponentLookupException {
+        //ClassLoader originalCl = Thread.currentThread().getContextClassLoader();
+        try {
+            //Thread.currentThread().setContextClassLoader(this.plexusContainer.getContainerRealm());
+            ProjectBuilder projectBuilder = lookup(ProjectBuilder.class);
+            ProjectBuildingRequest projectBuildingRequest = mavenExecutionRequest.getProjectBuildingRequest();
+
+            //projectBuildingRequest.setValidationLevel(this.mavenRequest.getValidationLevel());
+
+            RepositorySystemSession repositorySystemSession = buildRepositorySystemSession(mavenExecutionRequest);
+
+            projectBuildingRequest.setRepositorySession(repositorySystemSession);
+
+            projectBuildingRequest.setProcessPlugins(false); //mavenRequest.isProcessPlugins());
+
+            projectBuildingRequest.setResolveDependencies(true); //this.mavenRequest.isResolveDependencies());
+
+            return projectBuilder.build(mavenProject, projectBuildingRequest);
+        } finally {
+            //Thread.currentThread().setContextClassLoader(originalCl);
+        }
+
+    }
     
-    // protected for test purposes
-    protected MavenRequest mavenConfiguration() throws MavenEmbedderException, ComponentLookupException {
-        MavenRequest mavenRequest = new MavenRequest();
-
-        if (userSettingsFile != null && userSettingsFile.exists()) {
-            mavenRequest.setUserSettingsFile(userSettingsFile.getAbsolutePath());
-        }
-        if (globalSettingsFile != null && globalSettingsFile.exists()) {
-            mavenRequest.setGlobalSettingsFile(globalSettingsFile.getAbsolutePath());
-        }
-
-        DependencyResolvingMavenEmbedder mavenEmbedder = new DependencyResolvingMavenEmbedder(MavenClasspathExtractor.class.getClassLoader(), mavenRequest);
-        mavenEmbedder.getMavenRequest().setLocalRepositoryPath(getLocalRepository(mavenEmbedder.getSettings().getLocalRepository()));
-
-        return mavenEmbedder.getMavenRequest();
+    public <T> T lookup(Class<T> clazz) throws ComponentLookupException {
+        return plexusContainer.lookup(clazz);
     }
 
-    /*
-    * can be overridden for test purposes.
-    */
-    protected String getLocalRepository(String localRepository) {
-        return localRepository;
+    private RepositorySystemSession buildRepositorySystemSession(MavenExecutionRequest mavenExecutionRequest) throws ComponentLookupException {
+        DefaultMaven defaultMaven = (DefaultMaven) lookup(Maven.class);
+        return defaultMaven.newRepositorySession(mavenExecutionRequest);
     }
 
+    public static PlexusContainer buildPlexusContainer(ClassLoader mavenClassLoader, ClassLoader parent) throws PlexusContainerException {
+        DefaultContainerConfiguration conf = new DefaultContainerConfiguration();
 
-    // protected for test purposes
-    protected void setMavenUserSettingsFile(File userSettingsFile) {
-        this.userSettingsFile = userSettingsFile;
+        ClassWorld classWorld = new ClassWorld();
+
+        ClassRealm classRealm = new ClassRealm( classWorld, "maven", mavenClassLoader );
+        classRealm.setParentRealm( new ClassRealm( classWorld, "maven-parent",
+                                                   parent == null ? Thread.currentThread().getContextClassLoader()
+                                                                   : parent ) );
+        conf.setRealm( classRealm );
+
+        return buildPlexusContainer(conf);
     }
 
-    // protected for test purposes
-    protected void setMavenGlobalSettingsFile(File globalSettingsFile) {
-        this.globalSettingsFile = globalSettingsFile;
+    private static PlexusContainer buildPlexusContainer(ContainerConfiguration containerConfiguration ) throws PlexusContainerException {
+        DefaultPlexusContainer plexusContainer = new DefaultPlexusContainer( containerConfiguration );
+        return plexusContainer;
     }
 
 }

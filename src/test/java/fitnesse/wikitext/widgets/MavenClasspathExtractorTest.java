@@ -1,5 +1,6 @@
 package fitnesse.wikitext.widgets;
 
+import org.codehaus.plexus.PlexusContainerException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -15,7 +16,7 @@ public class MavenClasspathExtractorTest {
     private File pomFile;
 
     @Before
-    public void setUp() {
+    public void setUp() throws PlexusContainerException {
         pomFile = new File(MavenClasspathExtractor.class
                 .getClassLoader().getResource("MavenClasspathWidget/pom.xml").getFile());
 
@@ -41,4 +42,5 @@ public class MavenClasspathExtractorTest {
         mavenClasspathExtractor.extractClasspathEntries(new File("test-pom.xml"));
     }
 
+    
 }

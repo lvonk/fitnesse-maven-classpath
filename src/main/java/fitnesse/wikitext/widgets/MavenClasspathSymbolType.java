@@ -8,6 +8,8 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
+import org.codehaus.plexus.PlexusContainerException;
+
 /**
  * FitNesse SymbolType implementation which enables Maven classpath integration for FitNesse.
  */
@@ -15,7 +17,7 @@ public class MavenClasspathSymbolType extends SymbolType implements Rule, Transl
 
     private MavenClasspathExtractor mavenClasspathExtractor;
 
-    public MavenClasspathSymbolType() {
+    public MavenClasspathSymbolType() throws PlexusContainerException {
         super("MavenClasspathSymbolType");
         this.mavenClasspathExtractor = new MavenClasspathExtractor();
 
