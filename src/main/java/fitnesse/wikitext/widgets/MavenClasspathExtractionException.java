@@ -1,5 +1,6 @@
 package fitnesse.wikitext.widgets;
 
+@SuppressWarnings("serial")
 public class MavenClasspathExtractionException extends RuntimeException {
 
     public MavenClasspathExtractionException(String message, Throwable cause) {
