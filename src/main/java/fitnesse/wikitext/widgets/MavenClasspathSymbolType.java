@@ -30,8 +30,6 @@ import fitnesse.wikitext.parser.Translator;
  */
 public class MavenClasspathSymbolType extends SymbolType implements Rule, Translation, PathsProvider {
 
-	Cache<ParsedSymbol, List<String>> pomCache;
-	
     private MavenClasspathExtractor mavenClasspathExtractor;
 
     public MavenClasspathSymbolType() throws PlexusContainerException {
@@ -42,16 +40,6 @@ public class MavenClasspathSymbolType extends SymbolType implements Rule, Transl
 
         wikiRule(this);
         htmlTranslation(this);
-        
-		pomCache = CacheBuilder.newBuilder()
-				.expireAfterAccess(10, TimeUnit.MINUTES)
-				.build(new CacheLoader<ParsedSymbol, List<String>>() {
-
-					@Override
-					public List<String> load(ParsedSymbol key) throws Exception {
-						return mavenClasspathExtractor.extractClasspathEntries(key.getPomFile(), key.getScope());
-					}
-				});
     }
 
     @Override
@@ -71,11 +59,7 @@ public class MavenClasspathSymbolType extends SymbolType implements Rule, Transl
  		
 		ParsedSymbol parsedSymbol = new ParsedSymbol(symbol.childAt(0).getContent());
 
-		try {
-			return pomCache.get(parsedSymbol);
-		} catch (ExecutionException e) {
-			throw new MavenClasspathExtractionException(e);
-		}
+		return mavenClasspathExtractor.extractClasspathEntries(parsedSymbol.getPomFile(), parsedSymbol.getScope());
 	}
 
 
