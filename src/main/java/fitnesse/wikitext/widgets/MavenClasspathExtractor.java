@@ -1,11 +1,5 @@
 package fitnesse.wikitext.widgets;
 
-import java.io.File;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Properties;
-
 import org.apache.maven.DefaultMaven;
 import org.apache.maven.Maven;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
@@ -14,23 +8,10 @@ import org.apache.maven.execution.DefaultMavenExecutionRequest;
 import org.apache.maven.execution.MavenExecutionRequest;
 import org.apache.maven.execution.MavenExecutionRequestPopulationException;
 import org.apache.maven.execution.MavenExecutionRequestPopulator;
-import org.apache.maven.project.MavenProject;
-import org.apache.maven.project.ProjectBuilder;
-import org.apache.maven.project.ProjectBuildingException;
-import org.apache.maven.project.ProjectBuildingRequest;
-import org.apache.maven.project.ProjectBuildingResult;
+import org.apache.maven.project.*;
 import org.apache.maven.settings.Settings;
-import org.apache.maven.settings.building.DefaultSettingsBuildingRequest;
-import org.apache.maven.settings.building.SettingsBuilder;
-import org.apache.maven.settings.building.SettingsBuildingException;
-import org.apache.maven.settings.building.SettingsBuildingRequest;
-import org.apache.maven.settings.building.SettingsBuildingResult;
-import org.apache.maven.settings.building.SettingsProblem;
-import org.codehaus.plexus.ContainerConfiguration;
-import org.codehaus.plexus.DefaultContainerConfiguration;
-import org.codehaus.plexus.DefaultPlexusContainer;
-import org.codehaus.plexus.PlexusContainer;
-import org.codehaus.plexus.PlexusContainerException;
+import org.apache.maven.settings.building.*;
+import org.codehaus.plexus.*;
 import org.codehaus.plexus.classworlds.ClassWorld;
 import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
@@ -38,6 +19,12 @@ import org.codehaus.plexus.logging.Logger;
 import org.codehaus.plexus.logging.console.ConsoleLoggerManager;
 import org.codehaus.plexus.util.Os;
 import org.sonatype.aether.RepositorySystemSession;
+
+import java.io.File;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * Utility class to extract classpath elements from Maven projects. Heavily based on code copied from Jenkin's Maven
@@ -50,7 +37,15 @@ public class MavenClasspathExtractor {
 	private final Logger logger = new ConsoleLoggerManager().getLoggerForComponent("maven-classpath-plugin");
 	
 	private PlexusContainer plexusContainer;
-    
+
+    // Ensure M2_HOME variable is handled in a way similar to the mvn executable (script). To the extend possible.
+    static {
+        String m2Home = System.getenv().get("M2_HOME");
+        if (m2Home != null && System.getProperty("maven.home") == null) {
+            System.setProperty("maven.home", m2Home);
+        }
+    }
+
     public MavenClasspathExtractor() throws PlexusContainerException {
     	plexusContainer = buildPlexusContainer(getClass().getClassLoader(), null);
     }
