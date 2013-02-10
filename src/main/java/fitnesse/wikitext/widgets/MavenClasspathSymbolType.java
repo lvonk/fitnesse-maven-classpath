@@ -1,32 +1,16 @@
 package fitnesse.wikitext.widgets;
 
+import fitnesse.html.HtmlUtil;
+import fitnesse.wikitext.parser.*;
+import org.codehaus.plexus.PlexusContainerException;
+import util.Maybe;
+
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-
-import org.codehaus.plexus.PlexusContainerException;
-
-import util.Maybe;
-
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-
-import fitnesse.html.HtmlUtil;
-import fitnesse.wikitext.parser.Matcher;
-import fitnesse.wikitext.parser.Parser;
-import fitnesse.wikitext.parser.Path;
-import fitnesse.wikitext.parser.PathsProvider;
-import fitnesse.wikitext.parser.Rule;
-import fitnesse.wikitext.parser.Symbol;
-import fitnesse.wikitext.parser.SymbolType;
-import fitnesse.wikitext.parser.Translation;
-import fitnesse.wikitext.parser.Translator;
 
 /**
- * FitNesse SymbolType implementation which enables Maven classpath integration for FitNesse.
+ * FitNesse SymbolType implementation. Enables Maven classpath integration for FitNesse.
  */
 public class MavenClasspathSymbolType extends SymbolType implements Rule, Translation, PathsProvider {
 
@@ -120,10 +104,6 @@ public class MavenClasspathSymbolType extends SymbolType implements Rule, Transl
 	        }
 
 			lastModified = pomFile.lastModified();
-		}
-		
-		public String getSymbol() {
-			return symbol;
 		}
 		
 		public File getPomFile() {

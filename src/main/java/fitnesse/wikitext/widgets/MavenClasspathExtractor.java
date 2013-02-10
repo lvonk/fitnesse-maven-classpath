@@ -170,27 +170,18 @@ public class MavenClasspathExtractor {
 
 
     public ProjectBuildingResult buildProject(File mavenProject, MavenExecutionRequest mavenExecutionRequest) throws ProjectBuildingException, ComponentLookupException {
-        //ClassLoader originalCl = Thread.currentThread().getContextClassLoader();
-        try {
-            //Thread.currentThread().setContextClassLoader(this.plexusContainer.getContainerRealm());
-            ProjectBuilder projectBuilder = lookup(ProjectBuilder.class);
-            ProjectBuildingRequest projectBuildingRequest = mavenExecutionRequest.getProjectBuildingRequest();
+        ProjectBuilder projectBuilder = lookup(ProjectBuilder.class);
+        ProjectBuildingRequest projectBuildingRequest = mavenExecutionRequest.getProjectBuildingRequest();
 
-            //projectBuildingRequest.setValidationLevel(this.mavenRequest.getValidationLevel());
+        RepositorySystemSession repositorySystemSession = buildRepositorySystemSession(mavenExecutionRequest);
 
-            RepositorySystemSession repositorySystemSession = buildRepositorySystemSession(mavenExecutionRequest);
+        projectBuildingRequest.setRepositorySession(repositorySystemSession);
 
-            projectBuildingRequest.setRepositorySession(repositorySystemSession);
+        projectBuildingRequest.setProcessPlugins(false);
 
-            projectBuildingRequest.setProcessPlugins(false); //mavenRequest.isProcessPlugins());
+        projectBuildingRequest.setResolveDependencies(true);
 
-            projectBuildingRequest.setResolveDependencies(true); //this.mavenRequest.isResolveDependencies());
-
-            return projectBuilder.build(mavenProject, projectBuildingRequest);
-        } finally {
-            //Thread.currentThread().setContextClassLoader(originalCl);
-        }
-
+        return projectBuilder.build(mavenProject, projectBuildingRequest);
     }
     
     public <T> T lookup(Class<T> clazz) throws ComponentLookupException {
