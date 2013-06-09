@@ -7,6 +7,7 @@ import util.Maybe;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -28,7 +29,12 @@ public class MavenClasspathSymbolType extends SymbolType implements Rule, Transl
 
     @Override
     public String toTarget(Translator translator, Symbol symbol) {
-        List<String> classpathElements = getClasspathElements(translator, symbol);
+        List<String> classpathElements = null;
+        try {
+            classpathElements = getClasspathElements(translator, symbol);
+        } catch (MavenClasspathExtractionException e) {
+            return HtmlUtil.metaText("Unable to parse POM file: " + e.getMessage()) + HtmlUtil.BRtag;
+        }
 
         String classpathForRender = "";
         for (String element : classpathElements) {
@@ -39,7 +45,7 @@ public class MavenClasspathSymbolType extends SymbolType implements Rule, Transl
 
     }
 
-	private List<String> getClasspathElements(Translator translator, Symbol symbol) {
+	private List<String> getClasspathElements(Translator translator, Symbol symbol) throws MavenClasspathExtractionException {
 		ParsedSymbol parsedSymbol = new ParsedSymbol(translator.translate(symbol.childAt(0)));
 
 		return mavenClasspathExtractor.extractClasspathEntries(parsedSymbol.getPomFile(), parsedSymbol.getScope());
@@ -68,8 +74,12 @@ public class MavenClasspathSymbolType extends SymbolType implements Rule, Transl
 
 	@Override
 	public Collection<String> providePaths(Translator translator, Symbol symbol) {
-		return getClasspathElements(translator, symbol);
-	}
+        try {
+            return getClasspathElements(translator, symbol);
+        } catch (MavenClasspathExtractionException e) {
+            return Collections.EMPTY_LIST;
+        }
+    }
 	
 	/**
 	 * Turn the pom+scope key into a comparable object, using the pom's last modified timestamp as

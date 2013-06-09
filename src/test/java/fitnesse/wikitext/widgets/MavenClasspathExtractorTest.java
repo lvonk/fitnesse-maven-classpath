@@ -24,7 +24,7 @@ public class MavenClasspathExtractorTest {
     }
 
     @Test
-    public void extractedClasspathIncludesTestScopeDependencies() {
+    public void extractedClasspathIncludesTestScopeDependencies() throws MavenClasspathExtractionException {
         List<String> classpathEntries = mavenClasspathExtractor.extractClasspathEntries(pomFile);
         StringBuffer sb = new StringBuffer();
         for (String cpEntry : classpathEntries) {
@@ -38,7 +38,7 @@ public class MavenClasspathExtractorTest {
     }
 
     @Test(expected = MavenClasspathExtractionException.class)
-    public void failsOnNonExistingPom() {
+    public void failsOnNonExistingPom() throws MavenClasspathExtractionException {
         mavenClasspathExtractor.extractClasspathEntries(new File("test-pom.xml"));
     }
 

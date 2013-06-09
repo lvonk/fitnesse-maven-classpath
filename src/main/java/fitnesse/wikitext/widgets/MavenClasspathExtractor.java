@@ -50,7 +50,7 @@ public class MavenClasspathExtractor {
     	plexusContainer = buildPlexusContainer(getClass().getClassLoader(), null);
     }
     
-    public List<String> extractClasspathEntries(File pomFile) {
+    public List<String> extractClasspathEntries(File pomFile) throws MavenClasspathExtractionException {
 		return extractClasspathEntries(pomFile, DEFAULT_SCOPE);
 	}
 

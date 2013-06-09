@@ -35,7 +35,7 @@ public class MavenClasspathSymbolTypeTest {
     }
 
     @Test
-    public void translatesToClasspathEntries() {
+    public void translatesToClasspathEntries() throws MavenClasspathExtractionException {
         Symbol child = mock(Symbol.class);
       Translator translator = mock(Translator.class);
 
@@ -50,7 +50,7 @@ public class MavenClasspathSymbolTypeTest {
     }
 
     @Test
-    public void translatesToJavaClasspath() {
+    public void translatesToJavaClasspath() throws MavenClasspathExtractionException {
         Symbol child = mock(Symbol.class);
         Translator translator = mock(Translator.class);
 
