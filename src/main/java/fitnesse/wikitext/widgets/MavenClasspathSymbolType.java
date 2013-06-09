@@ -28,7 +28,7 @@ public class MavenClasspathSymbolType extends SymbolType implements Rule, Transl
 
     @Override
     public String toTarget(Translator translator, Symbol symbol) {
-        List<String> classpathElements = getClasspathElements(symbol);
+        List<String> classpathElements = getClasspathElements(translator, symbol);
 
         String classpathForRender = "";
         for (String element : classpathElements) {
@@ -39,24 +39,18 @@ public class MavenClasspathSymbolType extends SymbolType implements Rule, Transl
 
     }
 
-	private List<String> getClasspathElements(Symbol symbol) {
- 		
-		ParsedSymbol parsedSymbol = new ParsedSymbol(symbol.childAt(0).getContent());
+	private List<String> getClasspathElements(Translator translator, Symbol symbol) {
+		ParsedSymbol parsedSymbol = new ParsedSymbol(translator.translate(symbol.childAt(0)));
 
 		return mavenClasspathExtractor.extractClasspathEntries(parsedSymbol.getPomFile(), parsedSymbol.getScope());
 	}
 
 
     @Override
-    public Maybe<Symbol> parse(Symbol symbol, Parser parser) {
-        Symbol next = parser.moveNext(1);
+    public Maybe<Symbol> parse(Symbol current, Parser parser) {
+        if (!parser.isMoveNext(SymbolType.Whitespace)) return Symbol.nothing;
 
-        if (!next.isType(SymbolType.Whitespace)) return Symbol.nothing;
-
-        symbol.add(parser.moveNext(1).getContent());
-
-
-        return new Maybe<Symbol>(symbol);
+        return new Maybe<Symbol>(current.add(parser.parseToEnds(0, SymbolProvider.pathRuleProvider, new SymbolType[] {SymbolType.Newline})));
     }
 
     @Override
@@ -74,7 +68,7 @@ public class MavenClasspathSymbolType extends SymbolType implements Rule, Transl
 
 	@Override
 	public Collection<String> providePaths(Translator translator, Symbol symbol) {
-		return getClasspathElements(symbol);
+		return getClasspathElements(translator, symbol);
 	}
 	
 	/**
