@@ -45,7 +45,7 @@ public class MavenClasspathSymbolTypeTest {
         when(mavenClasspathExtractor.extractClasspathEntries(any(File.class), isA(String.class)))
                 .thenReturn(Arrays.asList("test1", "test2"));
 
-        assertEquals("<span class=\"meta\">classpath: test1</span><br/><span class=\"meta\">classpath: test2</span><br/>"
+        assertEquals("<p class='meta'>Maven classpath [file: thePomFile, scope: test]:</p><ul class='meta'><li>test1</li><li>test2</li></ul>"
                 , mavenClasspathSymbolType.toTarget(translator, symbol));
     }
 
@@ -69,7 +69,7 @@ public class MavenClasspathSymbolTypeTest {
         String pageContents = "!pomFile pom.xml\n";
         VariableSource variableSource = mock(VariableSource.class);
         String html = ParserTestHelper.translateToHtml(null, pageContents, variableSource);
-        assertTrue(html, html.startsWith("<span class=\"meta\">classpath: "));
+        assertTrue(html, html.startsWith("<p class='meta'>Maven classpath [file: pom.xml, scope: test]:</p><ul class='meta'><li>"));
     }
 
     @Test
@@ -79,7 +79,7 @@ public class MavenClasspathSymbolTypeTest {
         VariableSource variableSource = mock(VariableSource.class);
         when(variableSource.findVariable("POM_XML")).thenReturn(new Maybe<String>("pom.xml"));
         String html = ParserTestHelper.translateToHtml(null, pageContents, variableSource);
-        assertTrue(html, html.startsWith("<span class=\"meta\">classpath: "));
+        assertTrue(html, html.startsWith("<p class='meta'>Maven classpath [file: pom.xml, scope: test]:</p><ul class='meta'><li>"));
     }
 
     private void configureMavenClasspathSymbolType() throws Exception {

@@ -30,27 +30,35 @@ public class MavenClasspathSymbolType extends SymbolType implements Rule, Transl
     @Override
     public String toTarget(Translator translator, Symbol symbol) {
         List<String> classpathElements = null;
+        ParsedSymbol parsedSymbol = getParsedSymbol(translator, symbol);
+        StringBuilder classpathForRender = new StringBuilder("<p class='meta'>Maven classpath [file: ")
+                .append(parsedSymbol.getPomFile())
+                .append(", scope: ")
+                .append(parsedSymbol.getScope())
+                .append("]:</p>")
+                .append("<ul class='meta'>");
         try {
-            classpathElements = getClasspathElements(translator, symbol);
+            classpathElements = getClasspathElements(parsedSymbol);
+            for (String element : classpathElements) {
+                classpathForRender.append("<li>").append(element).append("</li>");
+            }
         } catch (MavenClasspathExtractionException e) {
-            return HtmlUtil.metaText("Unable to parse POM file: " + e.getMessage()) + HtmlUtil.BRtag;
+            classpathForRender.append("<li class='error'>Unable to parse POM file: ")
+                            .append(e.getMessage()).append("</li>");
         }
 
-        String classpathForRender = "";
-        for (String element : classpathElements) {
-            classpathForRender += HtmlUtil.metaText("classpath: " + element) + HtmlUtil.BRtag;
-
-        }
-        return classpathForRender;
+        classpathForRender.append("</ul>");
+        return classpathForRender.toString();
 
     }
 
-	private List<String> getClasspathElements(Translator translator, Symbol symbol) throws MavenClasspathExtractionException {
-		ParsedSymbol parsedSymbol = new ParsedSymbol(translator.translate(symbol.childAt(0)));
+    private List<String> getClasspathElements(ParsedSymbol parsedSymbol) throws MavenClasspathExtractionException {
+        return mavenClasspathExtractor.extractClasspathEntries(parsedSymbol.getPomFile(), parsedSymbol.getScope());
+    }
 
-		return mavenClasspathExtractor.extractClasspathEntries(parsedSymbol.getPomFile(), parsedSymbol.getScope());
-	}
-
+    private ParsedSymbol getParsedSymbol(Translator translator, Symbol symbol) {
+        return new ParsedSymbol(translator.translate(symbol.childAt(0)));
+    }
 
     @Override
     public Maybe<Symbol> parse(Symbol current, Parser parser) {
@@ -64,7 +72,6 @@ public class MavenClasspathSymbolType extends SymbolType implements Rule, Transl
         return symbolType instanceof Path || super.matchesFor(symbolType);
     }
     
-
     /**
      * Exposed for testing
      */
@@ -75,7 +82,7 @@ public class MavenClasspathSymbolType extends SymbolType implements Rule, Transl
 	@Override
 	public Collection<String> providePaths(Translator translator, Symbol symbol) {
         try {
-            return getClasspathElements(translator, symbol);
+            return getClasspathElements(getParsedSymbol(translator, symbol));
         } catch (MavenClasspathExtractionException e) {
             return Collections.EMPTY_LIST;
         }
