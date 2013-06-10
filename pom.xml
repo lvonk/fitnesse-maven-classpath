@@ -10,7 +10,7 @@
   <groupId>org.fitnesse.plugins</groupId>
   <artifactId>maven-classpath-plugin</artifactId>
   <name>Maven Classpath Plugin</name>
-  <version>1.7-SNAPSHOT</version>
+  <version>1.7</version>
   <url>https://github.com/amolenaar/fitnesse-maven-classpath</url>
   
   <description>
