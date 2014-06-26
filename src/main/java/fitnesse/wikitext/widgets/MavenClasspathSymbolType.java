@@ -8,7 +8,9 @@ import util.Maybe;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * FitNesse SymbolType implementation. Enables Maven classpath integration for FitNesse.
@@ -16,6 +18,8 @@ import java.util.List;
 public class MavenClasspathSymbolType extends SymbolType implements Rule, Translation, PathsProvider {
 
     private MavenClasspathExtractor mavenClasspathExtractor;
+
+    private final Map<String, List<String>> classpathCache = new HashMap<String, List<String>>();
 
     public MavenClasspathSymbolType() throws PlexusContainerException {
         super("MavenClasspathSymbolType");
@@ -52,8 +56,15 @@ public class MavenClasspathSymbolType extends SymbolType implements Rule, Transl
 
     }
 
-    private List<String> getClasspathElements(ParsedSymbol parsedSymbol) throws MavenClasspathExtractionException {
-        return mavenClasspathExtractor.extractClasspathEntries(parsedSymbol.getPomFile(), parsedSymbol.getScope());
+    @SuppressWarnings("unchecked")
+	private List<String> getClasspathElements(final ParsedSymbol parsedSymbol) throws MavenClasspathExtractionException {
+    	if(classpathCache.containsKey(parsedSymbol.symbol)) {
+    		return classpathCache.get(parsedSymbol.symbol);
+    	} else {
+    		final List<String> classpath = mavenClasspathExtractor.extractClasspathEntries(parsedSymbol.getPomFile(), parsedSymbol.getScope());
+            classpathCache.put(parsedSymbol.symbol, classpath);
+            return classpath;
+    	}
     }
 
     private ParsedSymbol getParsedSymbol(Translator translator, Symbol symbol) {

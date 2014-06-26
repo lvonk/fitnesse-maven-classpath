@@ -33,6 +33,7 @@ import java.util.Properties;
 public class MavenClasspathExtractor {
 
 	public final static String DEFAULT_SCOPE = "test";
+	public final static String MAVEN_USER_SETTINGS = "maven.user.settings";
 
 	private final Logger logger = new ConsoleLoggerManager().getLoggerForComponent("maven-classpath-plugin");
 	
@@ -124,8 +125,15 @@ public class MavenClasspathExtractor {
 		SettingsBuildingRequest settingsRequest = new DefaultSettingsBuildingRequest();
 
 		// TODO: should be configurable by system properties?
-		File globalSettingsFile = MavenCli.DEFAULT_GLOBAL_SETTINGS_FILE;
-		File userSettingsFile = MavenCli.DEFAULT_USER_SETTINGS_FILE;
+		final File globalSettingsFile = MavenCli.DEFAULT_GLOBAL_SETTINGS_FILE;
+
+		//Allows users to set "maven.user.settings" if they use a custom settings.xml
+		File userSettingsFile;
+		if(System.getProperty(MAVEN_USER_SETTINGS) != null) {
+			userSettingsFile = new File(System.getProperty(MAVEN_USER_SETTINGS));
+		} else {
+			userSettingsFile = MavenCli.DEFAULT_USER_SETTINGS_FILE;
+		}
 
 		settingsRequest.setGlobalSettingsFile(globalSettingsFile);
 		settingsRequest.setUserSettingsFile(userSettingsFile);
