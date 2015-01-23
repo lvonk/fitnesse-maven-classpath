@@ -3,7 +3,6 @@ package fitnesse.wikitext.widgets;
 import fitnesse.html.HtmlUtil;
 import fitnesse.wikitext.parser.*;
 import org.codehaus.plexus.PlexusContainerException;
-import util.Maybe;
 
 import java.io.File;
 import java.util.Collection;

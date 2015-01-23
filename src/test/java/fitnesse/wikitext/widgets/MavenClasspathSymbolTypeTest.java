@@ -1,15 +1,12 @@
 package fitnesse.wikitext.widgets;
 
-import fitnesse.html.HtmlElement;
+import fitnesse.wiki.PageData;
 import fitnesse.wiki.WikiPage;
+import fitnesse.wiki.fs.InMemoryPage;
 import fitnesse.wikitext.parser.*;
 
-import fitnesse.wikitext.test.ParserTestHelper;
-import fitnesse.wikitext.test.TestRoot;
-import org.codehaus.plexus.PlexusContainerException;
 import org.junit.Before;
 import org.junit.Test;
-import util.Maybe;
 
 import java.io.File;
 import java.util.Arrays;
@@ -22,12 +19,12 @@ public class MavenClasspathSymbolTypeTest {
     private MavenClasspathSymbolType mavenClasspathSymbolType;
     private MavenClasspathExtractor mavenClasspathExtractor;
     private Symbol symbol;
-    private Parser parser;
+    private WikiPage wikiPage;
 
     @Before
     public void setUp() throws Exception {
         symbol = mock(Symbol.class);
-        parser = mock(Parser.class);
+        wikiPage = InMemoryPage.makeRoot("RooT");
         mavenClasspathExtractor = mock(MavenClasspathExtractor.class);
 
         mavenClasspathSymbolType = new MavenClasspathSymbolType();
@@ -66,20 +63,22 @@ public class MavenClasspathSymbolTypeTest {
     @Test
     public void loadPomXml() throws Exception {
         configureMavenClasspathSymbolType();
-        String pageContents = "!pomFile pom.xml\n";
-        VariableSource variableSource = mock(VariableSource.class);
-        String html = ParserTestHelper.translateToHtml(null, pageContents, variableSource);
+        PageData pageData = wikiPage.getData();
+        pageData.setContent("!pomFile pom.xml\n");
+        wikiPage.commit(pageData);
+        String html = wikiPage.getHtml();
         assertTrue(html, html.startsWith("<p class='meta'>Maven classpath [file: pom.xml, scope: test]:</p><ul class='meta'><li>"));
     }
 
     @Test
     public void loadPomXmlFromVariable() throws Exception {
         configureMavenClasspathSymbolType();
-        String pageContents = "!pomFile ${POM_XML}\n";
-        VariableSource variableSource = mock(VariableSource.class);
-        when(variableSource.findVariable("POM_XML")).thenReturn(new Maybe<String>("pom.xml"));
-        String html = ParserTestHelper.translateToHtml(null, pageContents, variableSource);
-        assertTrue(html, html.startsWith("<p class='meta'>Maven classpath [file: pom.xml, scope: test]:</p><ul class='meta'><li>"));
+        PageData pageData = wikiPage.getData();
+        pageData.setContent("!define POM_XML {pom.xml}\n" +
+                "!pomFile ${POM_XML}\n");
+        wikiPage.commit(pageData);
+        String html = wikiPage.getHtml();
+        assertTrue(html, html.contains("<p class='meta'>Maven classpath [file: pom.xml, scope: test]:</p><ul class='meta'><li>"));
     }
 
     private void configureMavenClasspathSymbolType() throws Exception {
