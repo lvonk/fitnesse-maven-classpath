@@ -23,6 +23,7 @@ public class MavenClasspathSymbolTypeTest {
 
     @Before
     public void setUp() throws Exception {
+        System.clearProperty(MavenClasspathSymbolType.DISABLE_KEY);
         symbol = mock(Symbol.class);
         wikiPage = InMemoryPage.makeRoot("RooT");
         mavenClasspathExtractor = mock(MavenClasspathExtractor.class);
@@ -79,6 +80,21 @@ public class MavenClasspathSymbolTypeTest {
         wikiPage.commit(pageData);
         String html = wikiPage.getHtml();
         assertTrue(html, html.contains("<p class='meta'>Maven classpath [file: pom.xml, scope: test]:</p><ul class='meta'><li>"));
+    }
+
+    @Test
+    public void canBeDisabled() throws Exception {
+        System.setProperty(MavenClasspathSymbolType.DISABLE_KEY, "TRUE");
+        mavenClasspathSymbolType = new MavenClasspathSymbolType();
+
+        Symbol child = mock(Symbol.class);
+        Translator translator = mock(Translator.class);
+
+        when(symbol.childAt(0)).thenReturn(child);
+        when(translator.translate(child)).thenReturn("thePomFile");
+
+        assertEquals("<p class='meta'>Maven classpath [file: thePomFile, scope: test]:</p><ul class='meta'></ul>"
+                , mavenClasspathSymbolType.toTarget(translator, symbol));
     }
 
     private void configureMavenClasspathSymbolType() throws Exception {
