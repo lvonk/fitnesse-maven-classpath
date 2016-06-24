@@ -6,4 +6,5 @@ target
 .settings
 .idea
 *.iml
-
+*.ipr
+*.iws

@@ -1,5 +1,6 @@
 package fitnesse.wikitext.widgets;
 
+import org.codehaus.plexus.PlexusContainerException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -15,7 +16,7 @@ public class MavenClasspathExtractorTest {
     private File pomFile;
 
     @Before
-    public void setUp() {
+    public void setUp() throws PlexusContainerException {
         pomFile = new File(MavenClasspathExtractor.class
                 .getClassLoader().getResource("MavenClasspathWidget/pom.xml").getFile());
 
@@ -23,7 +24,7 @@ public class MavenClasspathExtractorTest {
     }
 
     @Test
-    public void extractedClasspathIncludesTestScopeDependencies() {
+    public void extractedClasspathIncludesTestScopeDependencies() throws MavenClasspathExtractionException {
         List<String> classpathEntries = mavenClasspathExtractor.extractClasspathEntries(pomFile);
         StringBuffer sb = new StringBuffer();
         for (String cpEntry : classpathEntries) {
@@ -37,8 +38,9 @@ public class MavenClasspathExtractorTest {
     }
 
     @Test(expected = MavenClasspathExtractionException.class)
-    public void failsOnNonExistingPom() {
+    public void failsOnNonExistingPom() throws MavenClasspathExtractionException {
         mavenClasspathExtractor.extractClasspathEntries(new File("test-pom.xml"));
     }
 
+    
 }
